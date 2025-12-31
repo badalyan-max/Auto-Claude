@@ -33,9 +33,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import io
 import sys
 from datetime import datetime
 from pathlib import Path
+
+# Fix Windows console encoding for Unicode output
+if sys.platform == "win32":
+    try:
+        # Try to set UTF-8 mode
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    except Exception:
+        pass  # Fallback silently if encoding fix fails
 
 # Add backend to path for imports
 backend_dir = Path(__file__).parent
