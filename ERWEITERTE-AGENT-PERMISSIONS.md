@@ -1,7 +1,7 @@
-# Erweiterte Agent-Permissions
+# Erweiterte Agent-Permissions - FULL ACCESS MODE
 
 **Datum:** 31.12.2025  
-**Status:** ✅ Aktiviert
+**Status:** ✅ **FULL ACCESS MODE AKTIV** - Keine Einschränkungen
 
 ## Übersicht
 
@@ -109,38 +109,57 @@ Die Auto Claude Agents sind jetzt mit erweiterten Berechtigungen konfiguriert, �
 
 ## Sicherheits-Architektur
 
-Auch mit erweiterten Permissions bleibt das 3-Schichten-Sicherheitsmodell aktiv:
+### FULL ACCESS MODE (Standard seit 31.12.2025)
+
+Im **FULL ACCESS MODE** sind alle Validatoren deaktiviert. Die Agents haben die gleichen Rechte wie du selbst am Computer.
+
+**Was das bedeutet:**
+```python
+# ALLE Befehle sind jetzt erlaubt:
+✅ rm -rf /                          # Vorher blockiert - JETZT ERLAUBT
+✅ chmod 777 /etc/passwd              # Vorher blockiert - JETZT ERLAUBT
+✅ killall -9                         # Vorher blockiert - JETZT ERLAUBT
+✅ dropdb production                  # Vorher blockiert - JETZT ERLAUBT
+✅ redis-cli FLUSHALL                 # Vorher blockiert - JETZT ERLAUBT
+✅ sudo rm -rf /                      # Vorher blockiert - JETZT ERLAUBT
+✅ shutdown -h now                    # Vorher blockiert - JETZT ERLAUBT
+✅ reg add HKLM\Software\Test         # Vorher blockiert - JETZT ERLAUBT
+```
+
+### Basis-Sicherheit bleibt aktiv:
+
+Das 3-Schichten-Modell ist weiterhin aktiv, aber **ohne Extra-Validatoren**:
 
 ### 1️⃣ **OS Sandbox**
 - ✅ Aktiviert (`autoAllowBashIfSandboxed: True`)
 - Isoliert Bash-Befehle auf OS-Ebene
-- Verhindert Filesystem-Escape
 
 ### 2️⃣ **Filesystem Permissions**
-- ✅ Beschränkt auf Projekt-Verzeichnis
-- Erlaubt: `./**` und absoluter Projekt-Pfad
-- Blockiert: Zugriff außerhalb des Projekts
+- ✅ Konfiguriert für Projekt-Verzeichnis
+- ⚠️ Mit `Bash(*)` können Agents überall zugreifen
 
 ### 3️⃣ **Command Allowlist** (`security/hooks.py`)
-- ✅ Validiert alle Bash-Befehle
-- Prüft gegen `BASE_COMMANDS` + Stack-Commands
-- Extra-Validierung für sensitive Befehle (rm, chmod, kill, etc.)
+- ✅ Prüft gegen `BASE_COMMANDS` (404 Befehle)
+- ❌ **Validatoren sind DEAKTIVIERT** (FULL_ACCESS_MODE=true)
+- → Alle Befehle in BASE_COMMANDS werden ohne Extra-Prüfung ausgeführt
 
-**Beispiel-Validierung:**
+### Full Access Mode deaktivieren
+
+Falls du die Validatoren wieder aktivieren möchtest:
+
 ```python
-# Diese Befehle sind jetzt erlaubt:
-✅ git push origin main
-✅ powershell -Command "Get-Process"
-✅ tasklist | findstr python
-✅ gh pr create --title "Feature"
-✅ cmake --build .
-✅ msbuild /p:Configuration=Release
+# In apps/backend/security/validator_registry.py
+FULL_ACCESS_MODE = False
 
-# Diese sind IMMER NOCH blockiert:
-❌ rm -rf / (zu gefährlich)
-❌ chmod 777 /etc (außerhalb Projekt)
-❌ killall -9 (alle Prozesse)
+# Oder via Environment Variable:
+# FULL_ACCESS_MODE=false
 ```
+
+Dann werden wieder geprüft:
+- rm: Gefährliche Pfade blockiert (/, ~, /etc, etc.)
+- chmod: Nur sichere Modi erlaubt (+x, 755, etc.)
+- kill/pkill/killall: Nur Dev-Prozesse erlaubt
+- Datenbanken: Nur test/dev DBs können gelöscht werden
 
 ## Git Push & GitHub
 

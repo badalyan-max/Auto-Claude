@@ -1,9 +1,7 @@
 {
-  "last_sync": "2025-12-31T22:12:58.322412",
-  "total_syncs": 21,
+  "last_sync": "2025-12-31T22:13:59.059029",
+  "total_syncs": 14,
   "last_files": [
-    "ERWEITERTE-PERMISSIONS-SCHNELLSTART.md",
-    "apps/backend/project/command_registry/base.py",
-    "apps/backend/test_full_access.py"
+    "ERWEITERTE-PERMISSIONS-SCHNELLSTART.md"
   ]
 }
