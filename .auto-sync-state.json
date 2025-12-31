@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T21:36:47.440899",
+  "last_sync": "2025-12-31T21:37:36.441322",
   "total_syncs": 8,
   "last_files": [
-    "apps/backend/agents/tools_pkg/models.py"
+    "apps/backend/prompts/merge_reviewer.md"
   ]
 }
