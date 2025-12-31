@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T21:39:39.894143",
-  "total_syncs": 10,
+  "last_sync": "2025-12-31T21:40:49.238077",
+  "total_syncs": 9,
   "last_files": [
-    "apps/backend/core/worktree.py"
+    "apps/backend/smart_push.py"
   ]
 }
