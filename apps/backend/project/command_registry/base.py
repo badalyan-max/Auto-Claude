@@ -429,9 +429,19 @@ BASE_COMMANDS: set[str] = {
 }
 
 # =============================================================================
-# VALIDATED COMMANDS - Need extra validation even when allowed
+# VALIDATED COMMANDS - Commands that trigger extra validation
 # =============================================================================
-
+# NOTE: In FULL ACCESS MODE (default since 31.12.2025), these validations
+# are BYPASSED. See security/validator_registry.py for details.
+#
+# To re-enable validation:
+# 1. Set environment variable: FULL_ACCESS_MODE=false
+# 2. Or edit security/validator_registry.py
+#
+# The validations would check:
+# - rm: Block dangerous patterns like rm -rf /
+# - chmod: Only allow safe modes like +x, 755
+# - pkill/kill/killall: Only allow killing dev processes
 VALIDATED_COMMANDS: dict[str, str] = {
     "rm": "validate_rm",
     "chmod": "validate_chmod",
