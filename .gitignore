@@ -61,6 +61,10 @@ lerna-debug.log*
 .claude_settings.json
 .update-metadata.json
 
+# Auto-Save System
+.auto-save-running.lock
+.auto-save.log
+
 # ===========================
 # Python (apps/backend)
 # ===========================
