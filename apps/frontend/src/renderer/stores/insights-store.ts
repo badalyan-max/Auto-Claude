@@ -321,7 +321,9 @@ export async function newSession(projectId: string): Promise<InsightsSession | n
     useInsightsStore.getState().setSession(result.data);
     // Reload sessions list
     await loadInsightsSessions(projectId);
+    return result.data;
   }
+  return null;
 }
 
 export async function switchSession(projectId: string, sessionId: string): Promise<void> {
