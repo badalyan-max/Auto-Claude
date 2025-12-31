@@ -38,15 +38,15 @@ export class InsightsService extends EventEmitter {
     this.sessionManager = new SessionManager(this.storage, this.paths);
     this.executor = new InsightsExecutor(this.config);
 
-    // Forward executor events
-    this.executor.on('status', (projectId, status) => {
-      this.emit('status', projectId, status);
+    // Forward executor events (sessionId is used for multi-session support)
+    this.executor.on('status', (sessionId, status) => {
+      this.emit('status', sessionId, status);
     });
-    this.executor.on('stream-chunk', (projectId, chunk) => {
-      this.emit('stream-chunk', projectId, chunk);
+    this.executor.on('stream-chunk', (sessionId, chunk) => {
+      this.emit('stream-chunk', sessionId, chunk);
     });
-    this.executor.on('error', (projectId, error) => {
-      this.emit('error', projectId, error);
+    this.executor.on('error', (sessionId, error) => {
+      this.emit('error', sessionId, error);
     });
     this.executor.on('sdk-rate-limit', (info) => {
       this.emit('sdk-rate-limit', info);
