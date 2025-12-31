@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T23:27:09.978488",
-  "total_syncs": 18,
+  "last_sync": "2025-12-31T23:27:40.152310",
+  "total_syncs": 26,
   "last_files": [
-    "apps/frontend/src/renderer/stores/insights-store.ts"
+    "apps/frontend/src/renderer/components/InsightsTabBar.tsx"
   ]
 }
