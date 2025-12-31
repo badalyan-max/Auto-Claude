@@ -190,16 +190,20 @@ def get_index_age(project_dir: Path) -> float | None:
     return time.time() - index_mtime
 
 
-def get_index_status(project_dir: Path) -> dict:
+def get_index_status(project_dir: Path | str) -> dict:
     """
     Get detailed status information about the project index.
 
     Args:
-        project_dir: Root directory of the project
+        project_dir: Root directory of the project (Path or string)
 
     Returns:
         Dictionary with status information
     """
+    # Accept both Path and string
+    if isinstance(project_dir, str):
+        project_dir = Path(project_dir)
+    
     index_path = get_project_index_path(project_dir)
     age = get_index_age(project_dir)
 
