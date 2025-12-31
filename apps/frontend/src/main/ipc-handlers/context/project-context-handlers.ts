@@ -137,6 +137,75 @@ export function registerProjectContextHandlers(
     }
   );
 
+  // Get project index status (age, staleness, changed files)
+  ipcMain.handle(
+    IPC_CHANNELS.CONTEXT_INDEX_STATUS,
+    async (_, projectId: string): Promise<IPCResult<{
+      exists: boolean;
+      age_seconds: number | null;
+      age_human: string | null;
+      is_stale: boolean;
+      changed_files: string[];
+    }>> => {
+      const project = projectStore.getProject(projectId);
+      if (!project) {
+        return { success: false, error: 'Project not found' };
+      }
+
+      try {
+        const autoBuildSource = getEffectiveSourcePath();
+        if (!autoBuildSource) {
+          return { success: false, error: 'Auto-build source path not configured' };
+        }
+
+        const pythonCmd = getConfiguredPythonPath();
+        const [pythonCommand, pythonBaseArgs] = parsePythonCommand(pythonCmd);
+        const managerPath = path.join(autoBuildSource, 'project_index_manager.py');
+
+        // Run Python script to get status
+        const result = await new Promise<string>((resolve, reject) => {
+          let stdout = '';
+          let stderr = '';
+
+          const proc = spawn(pythonCommand, [
+            ...pythonBaseArgs,
+            '-c',
+            `import sys; sys.path.insert(0, '${autoBuildSource.replace(/\\/g, '\\\\')}'); from project_index_manager import get_index_status; import json; print(json.dumps(get_index_status('${project.path.replace(/\\/g, '\\\\')}')))`
+          ], {
+            cwd: autoBuildSource,
+            env: getAugmentedEnv()
+          });
+
+          proc.stdout?.on('data', (data) => {
+            stdout += data.toString();
+          });
+
+          proc.stderr?.on('data', (data) => {
+            stderr += data.toString();
+          });
+
+          proc.on('close', (code) => {
+            if (code === 0) {
+              resolve(stdout.trim());
+            } else {
+              reject(new Error(`Status check failed: ${stderr || stdout}`));
+            }
+          });
+
+          proc.on('error', reject);
+        });
+
+        const status = JSON.parse(result);
+        return { success: true, data: status };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to get index status'
+        };
+      }
+    }
+  );
+
   // Refresh project index
   ipcMain.handle(
     IPC_CHANNELS.CONTEXT_REFRESH_INDEX,

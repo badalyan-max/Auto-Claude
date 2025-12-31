@@ -10,7 +10,7 @@ import { detectRateLimit, createSDKRateLimitInfo, getProfileEnv, detectAuthFailu
 import { projectStore } from '../project-store';
 import { getClaudeProfileManager } from '../claude-profile-manager';
 import { parsePythonCommand, validatePythonPath } from '../python-detector';
-import { pythonEnvManager, getConfiguredPythonPath } from '../python-env-manager';
+import { getConfiguredPythonPath } from '../python-env-manager';
 
 /**
  * Process spawning and lifecycle management
@@ -50,10 +50,26 @@ export class AgentProcessManager {
     extraEnv: Record<string, string>
   ): NodeJS.ProcessEnv {
     const profileEnv = getProfileEnv();
+    // Load .env file from auto-claude backend directory
+    const autoBuildEnv = this.loadAutoBuildEnv();
+    
+    // Extend PATH with Claude CLI directory if CLAUDE_CLI_PATH is set
+    // The claude_agent_sdk uses shutil.which("claude") internally, so we need claude in PATH
+    let extendedPath = process.env.PATH || '';
+    const claudeCliPath = autoBuildEnv['CLAUDE_CLI_PATH'] || extraEnv['CLAUDE_CLI_PATH'];
+    if (claudeCliPath) {
+      const claudeDir = path.dirname(claudeCliPath);
+      if (!extendedPath.includes(claudeDir)) {
+        extendedPath = claudeDir + path.delimiter + extendedPath;
+      }
+    }
+    
     return {
       ...process.env,
+      ...autoBuildEnv,  // Load .env variables first (includes CLAUDE_CLI_PATH)
       ...extraEnv,
       ...profileEnv,
+      PATH: extendedPath,  // Use extended PATH with Claude CLI directory
       PYTHONUNBUFFERED: '1',
       PYTHONIOENCODING: 'utf-8',
       PYTHONUTF8: '1'
@@ -224,65 +240,9 @@ export class AgentProcessManager {
         const graphitiUrl = project.settings.graphitiMcpUrl || 'http://localhost:8000/mcp/';
         env['GRAPHITI_MCP_URL'] = graphitiUrl;
       }
-
-      // CLAUDE.md integration (enabled by default)
-      if (project.settings.useClaudeMd !== false) {
-        env['USE_CLAUDE_MD'] = 'true';
-      }
     }
 
     return env;
-  }
-
-  /**
-   * Load environment variables from project's .auto-claude/.env file
-   * This contains frontend-configured settings like memory/Graphiti configuration
-   */
-  private loadProjectEnv(projectPath: string): Record<string, string> {
-    // Find project by path to get autoBuildPath
-    const projects = projectStore.getProjects();
-    const project = projects.find((p) => p.path === projectPath);
-
-    if (!project?.autoBuildPath) {
-      return {};
-    }
-
-    const envPath = path.join(projectPath, project.autoBuildPath, '.env');
-    if (!existsSync(envPath)) {
-      return {};
-    }
-
-    try {
-      const envContent = readFileSync(envPath, 'utf-8');
-      const envVars: Record<string, string> = {};
-
-      // Handle both Unix (\n) and Windows (\r\n) line endings
-      for (const line of envContent.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        // Skip comments and empty lines
-        if (!trimmed || trimmed.startsWith('#')) {
-          continue;
-        }
-
-        const eqIndex = trimmed.indexOf('=');
-        if (eqIndex > 0) {
-          const key = trimmed.substring(0, eqIndex).trim();
-          let value = trimmed.substring(eqIndex + 1).trim();
-
-          // Remove quotes if present
-          if ((value.startsWith('"') && value.endsWith('"')) ||
-              (value.startsWith("'") && value.endsWith("'"))) {
-            value = value.slice(1, -1);
-          }
-
-          envVars[key] = value;
-        }
-      }
-
-      return envVars;
-    } catch {
-      return {};
-    }
   }
 
   /**
@@ -295,7 +255,8 @@ export class AgentProcessManager {
     }
 
     const envPath = path.join(autoBuildSource, '.env');
-    if (!existsSync(envPath)) {
+    const envExists = existsSync(envPath);
+    if (!envExists) {
       return {};
     }
 
@@ -345,18 +306,9 @@ export class AgentProcessManager {
     const spawnId = this.state.generateSpawnId();
     const env = this.setupProcessEnvironment(extraEnv);
 
-    // Get Python environment (PYTHONPATH for bundled packages, etc.)
-    const pythonEnv = pythonEnvManager.getPythonEnv();
-
     // Parse Python command to handle space-separated commands like "py -3"
     const [pythonCommand, pythonBaseArgs] = parsePythonCommand(this.getPythonPath());
-    const childProcess = spawn(pythonCommand, [...pythonBaseArgs, ...args], {
-      cwd,
-      env: {
-        ...env, // Already includes process.env, extraEnv, profileEnv, PYTHONUNBUFFERED, PYTHONUTF8
-        ...pythonEnv // Include Python environment (PYTHONPATH for bundled packages)
-      }
-    });
+    const childProcess = spawn(pythonCommand, [...pythonBaseArgs, ...args], { cwd, env });
 
     this.state.addProcess(taskId, {
       taskId,
@@ -571,17 +523,68 @@ export class AgentProcessManager {
   }
 
   /**
+   * Load environment variables from project-specific .env file
+   * (e.g., craft-connect-buddy/.auto-claude/.env)
+   */
+  private loadProjectDotEnv(projectPath: string): Record<string, string> {
+    // Find project to get autoBuildPath
+    const projects = projectStore.getProjects();
+    const project = projects.find((p) => p.path === projectPath);
+    
+    if (!project?.autoBuildPath) {
+      return {};
+    }
+
+    const envPath = path.join(projectPath, project.autoBuildPath, '.env');
+    
+    if (!existsSync(envPath)) {
+      return {};
+    }
+
+    try {
+      const envContent = readFileSync(envPath, 'utf-8');
+      const envVars: Record<string, string> = {};
+
+      // Handle both Unix (\n) and Windows (\r\n) line endings
+      for (const line of envContent.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        // Skip comments and empty lines
+        if (!trimmed || trimmed.startsWith('#')) {
+          continue;
+        }
+
+        const eqIndex = trimmed.indexOf('=');
+        if (eqIndex > 0) {
+          const key = trimmed.substring(0, eqIndex).trim();
+          let value = trimmed.substring(eqIndex + 1).trim();
+
+          // Remove quotes if present
+          if ((value.startsWith('"') && value.endsWith('"')) ||
+              (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+
+          envVars[key] = value;
+        }
+      }
+
+      return envVars;
+    } catch {
+      return {};
+    }
+  }
+
+  /**
    * Get combined environment variables for a project
-   *
-   * Priority (later sources override earlier):
-   * 1. Backend source .env (apps/backend/.env) - CLI defaults
-   * 2. Project's .auto-claude/.env - Frontend-configured settings (memory, integrations)
-   * 3. Project settings (graphitiMcpUrl, useClaudeMd) - Runtime overrides
+   * Priority (later overrides earlier):
+   * 1. Backend .env (apps/backend/.env)
+   * 2. Project-specific .env (project/.auto-claude/.env) - includes GRAPHITI_ENABLED, OPENAI_API_KEY etc.
+   * 3. Project settings (graphitiMcpUrl etc.)
    */
   getCombinedEnv(projectPath: string): Record<string, string> {
     const autoBuildEnv = this.loadAutoBuildEnv();
-    const projectFileEnv = this.loadProjectEnv(projectPath);
-    const projectSettingsEnv = this.getProjectEnvVars(projectPath);
-    return { ...autoBuildEnv, ...projectFileEnv, ...projectSettingsEnv };
+    const projectDotEnv = this.loadProjectDotEnv(projectPath);
+    const projectEnv = this.getProjectEnvVars(projectPath);
+    return { ...autoBuildEnv, ...projectDotEnv, ...projectEnv };
   }
 }

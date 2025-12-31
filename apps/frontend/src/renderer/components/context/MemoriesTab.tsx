@@ -25,6 +25,7 @@ interface MemoriesTabProps {
   searchResults: Array<{ type: string; content: string; score: number }>;
   searchLoading: boolean;
   onSearch: (query: string) => void;
+  onRefresh?: () => void;
 }
 
 export function MemoriesTab({
@@ -34,7 +35,8 @@ export function MemoriesTab({
   memoriesLoading,
   searchResults,
   searchLoading,
-  onSearch
+  onSearch,
+  onRefresh
 }: MemoriesTabProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState('');
 
@@ -47,6 +49,12 @@ export function MemoriesTab({
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh();
     }
   };
 
@@ -147,9 +155,22 @@ export function MemoriesTab({
 
         {/* Recent Memories */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Recent Memories
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Recent Memories
+            </h3>
+            {onRefresh && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={memoriesLoading}
+                className="h-8 px-2"
+              >
+                <RefreshCw className={cn("h-4 w-4", memoriesLoading && "animate-spin")} />
+              </Button>
+            )}
+          </div>
 
           {memoriesLoading && (
             <div className="flex items-center justify-center py-8">

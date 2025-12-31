@@ -1,0 +1,142 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║  🛡️  WINDOWS-SICHERHEIT FÜR CLAUDE CODE KONFIGURIEREN  🛡️          ║
+║                                                                      ║
+║             WÄHLEN SIE EINE DER FOLGENDEN OPTIONEN:                 ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  OPTION 1: AUTOMATISCH (EMPFOHLEN) ⭐                             ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  🔷 DOPPELKLICK auf: SCHNELL-KONFIGURIEREN.bat
+  
+  Was passiert:
+  ✓ Ein PowerShell-Fenster öffnet sich
+  ✓ UAC-Abfrage erscheint → Bestätigen Sie mit "JA"
+  ✓ Skript fügt automatisch alle Ausnahmen hinzu
+  ✓ Fenster zeigt den Status an
+  ✓ Fertig!
+  
+  ⏱️ Dauer: ~30 Sekunden
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  OPTION 2: MANUELL ÜBER GUI                                        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  📖 ÖFFNEN Sie: MANUELLE-ANLEITUNG.txt
+  
+  Folgen Sie der Schritt-für-Schritt-Anleitung:
+  1. Windows-Sicherheit öffnen
+  2. Zu "Viren- & Bedrohungsschutz" gehen
+  3. Ausschlüsse hinzufügen
+  4. Ordner auswählen
+  
+  ⏱️ Dauer: ~2-3 Minuten
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  OPTION 3: POWERSHELL-BEFEHLE (FÜR FORTGESCHRITTENE)              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  1. Windows-Taste drücken, "PowerShell" tippen
+  2. Rechtsklick → "Als Administrator ausführen"
+  3. Diese Befehle nacheinander eingeben:
+
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude"
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude\apps\backend"
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude\apps\frontend"
+
+  ⏱️ Dauer: ~1 Minute
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+📁 VERFÜGBARE DATEIEN:
+
+  ✅ START-HIER.txt (diese Datei)
+     → Übersicht aller Optionen
+  
+  ✅ SCHNELL-KONFIGURIEREN.bat ⭐
+     → Automatische Konfiguration (EMPFOHLEN!)
+  
+  ✅ MANUELLE-ANLEITUNG.txt
+     → Schritt-für-Schritt-Anleitung für manuelle Konfiguration
+  
+  ✅ Windows-Sicherheit-Konfigurieren.bat
+     → Alternatives automatisches Skript
+  
+  ✅ configure-windows-security.ps1
+     → PowerShell-Skript (wird automatisch aufgerufen)
+  
+  ✅ WINDOWS_SICHERHEIT_ANLEITUNG.md
+     → Ausführliche Dokumentation
+  
+  ✅ WINDOWS_SICHERHEIT_README.md
+     → Kurzübersicht und FAQ
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+⚡ SCHNELLSTART (30 SEKUNDEN):
+
+  1. Doppelklick auf: SCHNELL-KONFIGURIEREN.bat
+  2. UAC-Abfrage bestätigen
+  3. Warten bis "ERFOLGREICH KONFIGURIERT!" erscheint
+  4. Claude Code neu starten
+  5. ✅ Fertig!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+❓ WAS WIRD KONFIGURIERT?
+
+Die Skripte fügen folgende Ordner als Windows Defender-Ausnahmen hinzu:
+
+  ✓ C:\Projekte\auto-claude (Hauptprojekt)
+  ✓ C:\Projekte\auto-claude\apps\backend (Backend)
+  ✓ C:\Projekte\auto-claude\apps\frontend (Frontend)
+  ✓ Node-Module und Python-Umgebungen (falls vorhanden)
+
+Das bedeutet: Windows Defender scannt diese Ordner nicht mehr und
+blockiert keine Claude Code-Funktionen.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+⚠️ WICHTIGE HINWEISE:
+
+  • Die Skripte benötigen Administrator-Rechte (UAC-Abfrage!)
+  • Ihre allgemeine Windows-Sicherheit bleibt aktiv
+  • Nur Ihr Projektordner wird ausgenommen
+  • Nach der Konfiguration Claude Code NEU STARTEN!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+🔧 PROBLEME?
+
+  Skript funktioniert nicht?
+  → Siehe MANUELLE-ANLEITUNG.txt für GUI-basierte Konfiguration
+  
+  App wird immer noch blockiert?
+  → Siehe WINDOWS_SICHERHEIT_ANLEITUNG.md für erweiterte Lösungen
+  
+  Weitere Fragen?
+  → Siehe WINDOWS_SICHERHEIT_README.md für FAQ
+
+
+═══════════════════════════════════════════════════════════════════════
+
+            🚀 JETZT STARTEN: SCHNELL-KONFIGURIEREN.bat 🚀
+
+═══════════════════════════════════════════════════════════════════════
+

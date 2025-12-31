@@ -27,6 +27,12 @@ export function Context({ projectId }: ContextProps) {
   const handleRefreshIndex = useRefreshIndex(projectId);
   const handleSearch = useMemorySearch(projectId);
 
+  const handleRefreshMemories = async () => {
+    // Reload project context which includes memories
+    const { loadProjectContext } = await import('../../stores/context-store');
+    await loadProjectContext(projectId);
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
@@ -63,6 +69,7 @@ export function Context({ projectId }: ContextProps) {
             searchResults={searchResults}
             searchLoading={searchLoading}
             onSearch={handleSearch}
+            onRefresh={handleRefreshMemories}
           />
         </TabsContent>
       </Tabs>

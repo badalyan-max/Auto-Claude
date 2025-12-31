@@ -68,6 +68,8 @@ SERVICE_INDICATORS = {
     "core",
     "shared",
     "common",
+    "supabase",  # Supabase backend-as-a-service
+    "functions",  # Serverless functions (Supabase, Vercel, Netlify)
 }
 
 # Files that indicate a service root
@@ -83,6 +85,8 @@ SERVICE_ROOT_FILES = {
     "build.gradle",
     "Makefile",
     "Dockerfile",
+    "config.toml",  # Supabase configuration
+    "deno.json",  # Deno/Supabase Edge Functions
 }
 
 

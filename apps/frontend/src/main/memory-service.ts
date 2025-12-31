@@ -585,8 +585,9 @@ export async function closeMemoryService(): Promise<void> {
  * Check if Python with LadybugDB is available
  */
 export function isKuzuAvailable(): boolean {
-  // Check if Python is available (findPythonCommand can return null)
-  const pythonCmd = findPythonCommand();
+  // Use getConfiguredPythonPath which prefers venv Python
+  // (has dependencies installed) over system Python
+  const pythonCmd = getConfiguredPythonPath();
   if (!pythonCmd) {
     return false;
   }
@@ -613,8 +614,9 @@ export function getMemoryServiceStatus(dbPath?: string): MemoryServiceStatus {
     ? fs.readdirSync(basePath).filter((name) => !name.startsWith('.'))
     : [];
 
-  // Check if Python and script are available (findPythonCommand can return null)
-  const pythonAvailable = findPythonCommand() !== null;
+  // Use getConfiguredPythonPath which prefers venv Python
+  const pythonCmd = getConfiguredPythonPath();
+  const pythonAvailable = pythonCmd !== null && pythonCmd !== 'python';
   const scriptAvailable = getQueryScriptPath() !== null;
 
   return {

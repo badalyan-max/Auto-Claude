@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Post-merge Git hook to automatically refresh project_index.json
+# when project files change after git pull/merge
+#
+# Installation:
+#   git config core.hooksPath apps/backend/.githooks
+#   chmod +x apps/backend/.githooks/post-merge
+
+# Check if we're in the project root
+if [ ! -f "package.json" ] && [ ! -f "pyproject.toml" ] && [ ! -f "supabase/config.toml" ]; then
+  exit 0
+fi
+
+# Files that trigger index refresh
+TRIGGER_FILES="package.json requirements.txt pyproject.toml Cargo.toml go.mod supabase/config.toml supabase/functions supabase/migrations"
+
+# Check if any trigger files were modified in the merge
+CHANGED=0
+for file in $TRIGGER_FILES; do
+  if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^$file"; then
+    CHANGED=1
+    break
+  fi
+done
+
+# If no relevant files changed, skip refresh
+if [ $CHANGED -eq 0 ]; then
+  exit 0
+fi
+
+echo "[auto-claude] Detected changes to project structure, refreshing project index..."
+
+# Find Python (try venv first, then system)
+PYTHON=""
+if [ -f "apps/backend/.venv/bin/python" ]; then
+  PYTHON="apps/backend/.venv/bin/python"
+elif [ -f "apps/backend/.venv/Scripts/python.exe" ]; then
+  PYTHON="apps/backend/.venv/Scripts/python.exe"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON="python3"
+elif command -v python >/dev/null 2>&1; then
+  PYTHON="python"
+else
+  echo "[auto-claude] Warning: Python not found, skipping index refresh"
+  exit 0
+fi
+
+# Run analyzer if auto-claude backend exists
+if [ -f "apps/backend/analysis/analyzer.py" ]; then
+  $PYTHON -m analysis.analyzer --project . --output .auto-claude/project_index.json 2>&1 | grep -v "^$"
+  echo "[auto-claude] Project index refreshed successfully"
+elif [ -d ".auto-claude" ]; then
+  # Try using project_index_manager if available
+  if [ -f "apps/backend/project_index_manager.py" ]; then
+    $PYTHON -c "import sys; sys.path.insert(0, 'apps/backend'); from project_index_manager import refresh_project_index; from pathlib import Path; refresh_project_index(Path('.'))" 2>&1
+    echo "[auto-claude] Project index refreshed successfully"
+  fi
+fi
+
+exit 0
+

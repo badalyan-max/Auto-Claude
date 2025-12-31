@@ -34,16 +34,10 @@ class ContextBuilder:
         self.pattern_discoverer = PatternDiscoverer(self.project_dir)
 
     def _load_project_index(self) -> dict:
-        """Load project index from file or create new one (.auto-claude is the installed instance)."""
-        index_file = self.project_dir / ".auto-claude" / "project_index.json"
-        if index_file.exists():
-            with open(index_file) as f:
-                return json.load(f)
+        """Load project index with automatic refresh if stale."""
+        from project_index_manager import load_project_index
 
-        # Try to create one
-        from analyzer import analyze_project
-
-        return analyze_project(self.project_dir)
+        return load_project_index(self.project_dir, auto_refresh=True)
 
     def build_context(
         self,

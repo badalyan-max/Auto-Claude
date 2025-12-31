@@ -1,0 +1,79 @@
+================================================================================
+   AUTO CLAUDE - GITHUB SYNC STARTER
+================================================================================
+
+SCHNELLSTART (30 Sekunden):
+----------------------------
+
+1. Desktop-Verknuepfungen erstellen:
+   
+   .\Create-Safe-Sync-Shortcut.ps1
+
+2. Doppelklick auf Desktop-Icon:
+   
+   "Auto Claude (Safe Sync)"
+
+3. Fertig! Auto Claude pullt automatisch von GitHub vor jedem Start.
+
+
+ODER Terminal-Befehl:
+---------------------
+
+.\Start-Auto-Claude-With-Sync-v2.ps1
+
+
+WAS MACHT ES?
+-------------
+
+✅ Prueft Git Repository
+✅ Prueft lokale Aenderungen  
+✅ Pullt automatisch von GitHub
+✅ Erkennt Merge-Konflikte
+✅ Prueft Python Environment
+✅ Startet Auto Claude nur wenn alles OK
+
+WICHTIG:
+--------
+
+Auto Claude sieht jetzt IMMER die neuesten GitHub-Aenderungen!
+
+Lovable-Aenderungen werden automatisch synchronisiert!
+
+
+DOKUMENTATION:
+--------------
+
+Vollstaendige Anleitung:  GITHUB-SYNC-ANLEITUNG.md
+Tests durchfuehren:       .\Test-Sync-Script-Simple.ps1
+Fehlerbehebung:           GITHUB-SYNC-ANLEITUNG.md (Abschnitt "Fehlerbehebung")
+
+
+OPTIONEN:
+---------
+
+Interaktiv (Standard):
+   .\Start-Auto-Claude-With-Sync-v2.ps1
+
+Mit Task:
+   .\Start-Auto-Claude-With-Sync-v2.ps1 -Task "Add feature"
+
+Spec ausfuehren:
+   .\Start-Auto-Claude-With-Sync-v2.ps1 -Mode run -Spec 001
+
+Monitor:
+   .\Start-Auto-Claude-With-Sync-v2.ps1 -Mode monitor
+
+Ohne Pull (fuer Tests):
+   .\Start-Auto-Claude-With-Sync-v2.ps1 -NoPull
+
+
+SUPPORT:
+--------
+
+Bei Problemen: GITHUB-SYNC-ANLEITUNG.md
+Tests laufen:  .\Test-Sync-Script-Simple.ps1
+
+
+================================================================================
+   Viel Erfolg mit bombensicherem GitHub Sync! ✅
+================================================================================

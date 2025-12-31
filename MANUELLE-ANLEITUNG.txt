@@ -1,0 +1,116 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║  MANUELLE WINDOWS-SICHERHEIT KONFIGURATION FÜR CLAUDE CODE          ║
+║  Falls die automatischen Skripte nicht funktionieren                ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ METHODE 1: Windows-Einstellungen (EINFACH & EMPFOHLEN)              │
+└──────────────────────────────────────────────────────────────────────┘
+
+Schritt 1: Windows-Sicherheit öffnen
+  □ Drücken Sie [Windows-Taste]
+  □ Tippen Sie: "Windows-Sicherheit"
+  □ Klicken Sie auf die App
+
+Schritt 2: Zu Viren-& Bedrohungsschutz navigieren
+  □ Klicken Sie auf "Viren- & Bedrohungsschutz"
+  □ Scrollen Sie nach unten
+  □ Klicken Sie auf "Einstellungen für Viren- & Bedrohungsschutz verwalten"
+
+Schritt 3: Ausschlüsse hinzufügen
+  □ Scrollen Sie ganz nach unten zu "Ausschlüsse"
+  □ Klicken Sie auf "Ausschlüsse hinzufügen oder entfernen"
+  □ Klicken Sie auf [+ Ausschluss hinzufügen]
+  □ Wählen Sie "Ordner"
+  
+Schritt 4: Fügen Sie diese Ordner nacheinander hinzu:
+  1. C:\Projekte\auto-claude
+  2. C:\Projekte\auto-claude\apps\backend
+  3. C:\Projekte\auto-claude\apps\frontend
+  4. C:\Projekte\auto-claude\apps\frontend\node_modules
+  
+  Wiederholen Sie Schritt 3 für jeden Ordner!
+
+Schritt 5: Fertig!
+  □ Schließen Sie Windows-Sicherheit
+  □ Starten Sie Claude Code neu
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ METHODE 2: PowerShell-Befehl (SCHNELL)                              │
+└──────────────────────────────────────────────────────────────────────┘
+
+  1. Drücken Sie [Windows-Taste]
+  2. Tippen Sie: "PowerShell"
+  3. Rechtsklick auf "Windows PowerShell"
+  4. Wählen Sie "Als Administrator ausführen"
+  5. Kopieren Sie diesen Befehl und drücken Sie Enter:
+
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude"
+
+  6. Wiederholen Sie für weitere Ordner:
+
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude\apps\backend"
+     Add-MpPreference -ExclusionPath "C:\Projekte\auto-claude\apps\frontend"
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ ÜBERPRÜFUNG: Wurden die Ausnahmen hinzugefügt?                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+  1. Öffnen Sie PowerShell als Administrator
+  2. Führen Sie aus: Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
+  3. Sie sollten Ihre Ordner in der Liste sehen
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ ZUSÄTZLICH: SmartScreen-Warnung deaktivieren (OPTIONAL)             │
+└──────────────────────────────────────────────────────────────────────┘
+
+Falls Sie beim Starten der App eine SmartScreen-Warnung erhalten:
+
+  1. Öffnen Sie Windows-Sicherheit
+  2. Klicken Sie auf "App- und Browsersteuerung"
+  3. Unter "Zuverlässigkeitsbasierter Schutz":
+     - Klicken Sie auf "Einstellungen für zuverlässigkeitsbasierten Schutz"
+  4. Ändern Sie "Apps und Dateien überprüfen" von "Blockieren" auf "Warnen"
+  
+  ⚠ WARNUNG: Dies reduziert Ihre Sicherheit! Nur für vertrauenswürdige Apps!
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROBLEMBEHEBUNG                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+Problem: "Sie haben keine ausreichenden Berechtigungen"
+→ Lösung: Führen Sie PowerShell ALS ADMINISTRATOR aus
+
+Problem: App wird immer noch blockiert
+→ Lösung: 
+  1. Überprüfen Sie, ob die Ausnahmen wirklich hinzugefügt wurden
+  2. Starten Sie Windows neu
+  3. Deaktivieren Sie "Kontrollierten Ordnerzugriff"
+
+Problem: "Diese App wurde aus Sicherheitsgründen blockiert"
+→ Lösung: Passen Sie SmartScreen-Einstellungen an (siehe oben)
+
+
+┌──────────────────────────────────────────────────────────────────────┐
+│ KONTROLLIERTER ORDNERZUGRIFF (falls aktiviert)                      │
+└──────────────────────────────────────────────────────────────────────┘
+
+Falls der "Kontrollierte Ordnerzugriff" aktiv ist:
+
+  1. Windows-Sicherheit öffnen
+  2. "Viren- & Bedrohungsschutz" → "Ransomware-Schutz verwalten"
+  3. Unter "Kontrollierter Ordnerzugriff":
+     - Klicken Sie auf "App durch kontrollierten Ordnerzugriff zulassen"
+     - Fügen Sie die .exe-Datei Ihrer Claude Code App hinzu
+
+
+═══════════════════════════════════════════════════════════════════════
+
+✓ Nach der Konfiguration: CLAUDE CODE NEU STARTEN!
+
+═══════════════════════════════════════════════════════════════════════
+

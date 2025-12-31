@@ -28,6 +28,9 @@ export interface TaskSpecContent {
   requirements?: Record<string, unknown>; // Parsed requirements.json
   qaReport?: string; // Content of qa_report.md
   implementationPlan?: ImplementationPlan; // Parsed implementation_plan.json
+  gitCommits?: string[]; // Git commit messages for this task
+  sessionInsights?: Array<{ session: number; insights: any }>; // Memory/session insights
+  changedFiles?: string[]; // Files that were changed during this task
   error?: string; // Error message if loading failed
 }
 

@@ -271,10 +271,11 @@ export class ChangelogService extends EventEmitter {
   }
 
   /**
-   * Load spec files for given tasks
+   * Load spec files for given tasks with enriched context
    */
   async loadTaskSpecs(projectPath: string, taskIds: string[], tasks: Task[], specsBaseDir?: string): Promise<TaskSpecContent[]> {
     const specsDir = path.join(projectPath, specsBaseDir || AUTO_BUILD_PATHS.SPECS_DIR);
+    console.log('[ChangelogService] loadTaskSpecs called', { projectPath, specsDir, taskCount: taskIds.length });
     this.debug('loadTaskSpecs called', { projectPath, specsDir, taskCount: taskIds.length });
 
     const results: TaskSpecContent[] = [];
@@ -319,6 +320,19 @@ export class ChangelogService extends EventEmitter {
         if (existsSync(planPath)) {
           content.implementationPlan = JSON.parse(readFileSync(planPath, 'utf-8')) as ImplementationPlan;
         }
+
+        // NEW: Load git commits for this task
+        content.gitCommits = this.loadTaskCommits(projectPath, specDir);
+        console.log(`[ChangelogService] Task ${task.specId}: Loaded ${content.gitCommits?.length || 0} commits`);
+
+        // NEW: Load memory/session insights
+        content.sessionInsights = this.loadTaskMemories(specDir);
+        console.log(`[ChangelogService] Task ${task.specId}: Loaded ${content.sessionInsights?.length || 0} session insights`);
+
+        // NEW: Load changed files summary
+        content.changedFiles = this.loadChangedFiles(projectPath, specDir);
+        console.log(`[ChangelogService] Task ${task.specId}: Loaded ${content.changedFiles?.length || 0} changed files`);
+
       } catch (error) {
         content.error = error instanceof Error ? error.message : 'Failed to load spec files';
         this.debug('Error loading spec', { specId: task.specId, error: content.error });
@@ -329,6 +343,203 @@ export class ChangelogService extends EventEmitter {
 
     this.debug('loadTaskSpecs complete', { loadedCount: results.length });
     return results;
+  }
+
+  /**
+   * Load git commits associated with a task
+   * Tries multiple strategies to find commits for this task
+   */
+  private loadTaskCommits(projectPath: string, specDir: string): string[] {
+    try {
+      const { execSync } = require('child_process');
+      const specId = path.basename(specDir);
+      const commits: string[] = [];
+
+      // Strategy 1: Try to find commits from auto-claude branch
+      try {
+        const branchName = `auto-claude/${specId}`;
+        
+        // Check if branch exists
+        const branchExists = execSync(
+          `git rev-parse --verify ${branchName}`,
+          { cwd: projectPath, encoding: 'utf-8', timeout: 5000, stdio: 'pipe' }
+        ).toString().trim();
+        
+        if (branchExists) {
+          // Get commits from the branch (compared to main)
+          const branchCommits = execSync(
+            `git log --oneline main..${branchName} --no-merges`,
+            { cwd: projectPath, encoding: 'utf-8', timeout: 5000 }
+          ).toString().trim();
+          
+          if (branchCommits) {
+            commits.push(...branchCommits.split('\n').filter(line => line.trim()));
+          }
+        }
+      } catch {
+        // Branch strategy failed, try next
+      }
+
+      // Strategy 2: Search commit messages for spec ID
+      if (commits.length === 0) {
+        try {
+          const searchCommits = execSync(
+            `git log --oneline --all --grep="${specId}" --no-merges`,
+            { cwd: projectPath, encoding: 'utf-8', timeout: 5000 }
+          ).toString().trim();
+          
+          if (searchCommits) {
+            commits.push(...searchCommits.split('\n').filter(line => line.trim()));
+          }
+        } catch {
+          // Search strategy failed
+        }
+      }
+
+      // Strategy 3: Get recent commits from main (last 50) and filter by file paths from plan
+      if (commits.length === 0) {
+        try {
+          const planPath = path.join(specDir, 'implementation_plan.json');
+          if (existsSync(planPath)) {
+            const plan = JSON.parse(readFileSync(planPath, 'utf-8'));
+            const filesToModify: string[] = [];
+            
+            // Extract files from plan
+            if (plan.phases && Array.isArray(plan.phases)) {
+              for (const phase of plan.phases) {
+                if (phase.subtasks && Array.isArray(phase.subtasks)) {
+                  for (const subtask of phase.subtasks) {
+                    if (subtask.files_to_modify && Array.isArray(subtask.files_to_modify)) {
+                      filesToModify.push(...subtask.files_to_modify);
+                    }
+                  }
+                }
+              }
+            }
+            
+            // If we have files, search for commits that touched them
+            if (filesToModify.length > 0) {
+              const fileCommits = execSync(
+                `git log --oneline -n 50 --no-merges -- ${filesToModify.slice(0, 10).join(' ')}`,
+                { cwd: projectPath, encoding: 'utf-8', timeout: 5000 }
+              ).toString().trim();
+              
+              if (fileCommits) {
+                commits.push(...fileCommits.split('\n').filter(line => line.trim()));
+              }
+            }
+          }
+        } catch {
+          // File-based search failed
+        }
+      }
+
+      return commits.slice(0, 20); // Limit to 20 commits
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Load session insights/memories for a task
+   */
+  private loadTaskMemories(specDir: string): Array<{ session: number; insights: any }> {
+    try {
+      const memoryDir = path.join(specDir, 'memory', 'session_insights');
+      if (!existsSync(memoryDir)) {
+        return [];
+      }
+
+      const { readdirSync } = require('fs');
+      const sessionFiles = readdirSync(memoryDir)
+        .filter((f: string) => f.startsWith('session_') && f.endsWith('.json'))
+        .sort();
+
+      const insights: Array<{ session: number; insights: any }> = [];
+      
+      for (const file of sessionFiles) {
+        try {
+          const sessionPath = path.join(memoryDir, file);
+          const sessionData = JSON.parse(readFileSync(sessionPath, 'utf-8'));
+          insights.push({
+            session: sessionData.session_number,
+            insights: {
+              what_worked: sessionData.what_worked || [],
+              patterns: sessionData.discoveries?.patterns_found || [],
+              gotchas: sessionData.discoveries?.gotchas_encountered || []
+            }
+          });
+        } catch {
+          // Skip invalid session files
+        }
+      }
+
+      return insights;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Load summary of changed files for a task
+   * Uses git to find files changed in the task branch
+   */
+  private loadChangedFiles(projectPath: string, specDir: string): string[] {
+    try {
+      const { execSync } = require('child_process');
+      const specId = path.basename(specDir);
+
+      // Strategy 1: Try worktree branch
+      try {
+        const worktreePath = path.join(projectPath, '.worktrees', specId);
+        const branchName = `auto-claude/${specId}`;
+        
+        if (existsSync(worktreePath)) {
+          const changedFiles = execSync(
+            `git diff --name-only main...${branchName}`,
+            { cwd: projectPath, encoding: 'utf-8', timeout: 5000 }
+          ).toString().trim();
+          
+          if (changedFiles) {
+            return changedFiles.split('\n').filter(line => line.trim());
+          }
+        }
+      } catch {
+        // Worktree strategy failed
+      }
+
+      // Strategy 2: Check implementation plan for file list
+      try {
+        const planPath = path.join(specDir, 'implementation_plan.json');
+        if (existsSync(planPath)) {
+          const plan = JSON.parse(readFileSync(planPath, 'utf-8'));
+          const files: string[] = [];
+          
+          // Extract files from subtasks
+          if (plan.phases && Array.isArray(plan.phases)) {
+            for (const phase of plan.phases) {
+              if (phase.subtasks && Array.isArray(phase.subtasks)) {
+                for (const subtask of phase.subtasks) {
+                  if (subtask.files_to_modify && Array.isArray(subtask.files_to_modify)) {
+                    files.push(...subtask.files_to_modify);
+                  }
+                }
+              }
+            }
+          }
+          
+          if (files.length > 0) {
+            return [...new Set(files)]; // Deduplicate
+          }
+        }
+      } catch {
+        // Plan reading failed
+      }
+
+      return [];
+    } catch {
+      return [];
+    }
   }
 
   // ============================================

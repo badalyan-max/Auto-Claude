@@ -142,6 +142,7 @@ export const IPC_CHANNELS = {
 
   // Context operations
   CONTEXT_GET: 'context:get',
+  CONTEXT_INDEX_STATUS: 'context:indexStatus',
   CONTEXT_REFRESH_INDEX: 'context:refreshIndex',
   CONTEXT_MEMORY_STATUS: 'context:memoryStatus',
   CONTEXT_SEARCH_MEMORIES: 'context:searchMemories',

@@ -144,25 +144,92 @@ export function buildChangelogPrompt(
   const formatInstruction = FORMAT_TEMPLATES[request.format](request.version, request.date);
   const emojiInstruction = getEmojiInstructions(request.emojiLevel, request.format);
 
-  // Build CONCISE task summaries (key to avoiding timeout)
-  const taskSummaries = specs.map(spec => {
-    const parts: string[] = [`- **${spec.specId}**`];
+  // Build ENRICHED task summaries with actual implementation context
+  console.log('[ChangelogFormatter] Building prompt for', specs.length, 'tasks');
+  
+  // Filter out tasks with no context (no commits, no files, no overview)
+  const specsWithContext = specs.filter(spec => {
+    const hasCommits = !!spec.gitCommits?.length;
+    const hasFiles = !!spec.changedFiles?.length;
+    const hasOverview = !!spec.spec && extractSpecOverview(spec.spec);
+    
+    return hasCommits || hasFiles || hasOverview;
+  });
+  
+  console.log(`[ChangelogFormatter] Filtered to ${specsWithContext.length} tasks with context (from ${specs.length} total)`);
+  
+  const taskSummaries = specsWithContext.map(spec => {
+    console.log(`[ChangelogFormatter] Task ${spec.specId}:`, {
+      hasCommits: !!spec.gitCommits?.length,
+      commitCount: spec.gitCommits?.length || 0,
+      hasFiles: !!spec.changedFiles?.length,
+      fileCount: spec.changedFiles?.length || 0,
+      hasInsights: !!spec.sessionInsights?.length
+    });
+    const parts: string[] = [`### Task: ${spec.specId}`];
 
     // Get workflow type if available
     if (spec.implementationPlan?.workflow_type) {
-      parts.push(`(${spec.implementationPlan.workflow_type})`);
+      parts.push(`**Type**: ${spec.implementationPlan.workflow_type}`);
     }
 
-    // Extract just the overview/purpose
+    // Extract overview/purpose
     if (spec.spec) {
       const overview = extractSpecOverview(spec.spec);
       if (overview) {
-        parts.push(`: ${overview}`);
+        parts.push(`**Overview**: ${overview}`);
       }
     }
 
-    return parts.join('');
-  }).join('\n');
+    // Add git commits (what was actually done)
+    if (spec.gitCommits && spec.gitCommits.length > 0) {
+      parts.push(`\n**Commits**:`);
+      spec.gitCommits.slice(0, 10).forEach(commit => {
+        parts.push(`- ${commit}`);
+      });
+    }
+
+    // Add changed files (what was modified)
+    if (spec.changedFiles && spec.changedFiles.length > 0) {
+      parts.push(`\n**Files Changed** (${spec.changedFiles.length} files):`);
+      // Show first 5 files
+      spec.changedFiles.slice(0, 5).forEach(file => {
+        parts.push(`- ${file}`);
+      });
+      if (spec.changedFiles.length > 5) {
+        parts.push(`- ... and ${spec.changedFiles.length - 5} more`);
+      }
+    }
+
+    // Add session insights (what worked, patterns discovered)
+    if (spec.sessionInsights && spec.sessionInsights.length > 0) {
+      const latestSession = spec.sessionInsights[spec.sessionInsights.length - 1];
+      if (latestSession.insights) {
+        if (latestSession.insights.what_worked?.length > 0) {
+          parts.push(`\n**Key Achievements**:`);
+          latestSession.insights.what_worked.forEach((item: string) => {
+            parts.push(`- ${item}`);
+          });
+        }
+        if (latestSession.insights.patterns?.length > 0) {
+          parts.push(`\n**Patterns Discovered**:`);
+          latestSession.insights.patterns.forEach((pattern: string) => {
+            parts.push(`- ${pattern}`);
+          });
+        }
+      }
+    }
+
+    // Add QA summary if available
+    if (spec.qaReport) {
+      const qaMatch = spec.qaReport.match(/## Summary\s+(.+?)(?=\n##|\n\n|\Z)/s);
+      if (qaMatch) {
+        parts.push(`\n**QA**: ${qaMatch[1].trim().substring(0, 150)}`);
+      }
+    }
+
+    return parts.join('\n');
+  }).join('\n\n---\n\n');
 
   // Format-specific instructions for tasks mode
   let formatSpecificInstructions = '';
@@ -191,12 +258,36 @@ ${formatInstruction}
 ${emojiInstruction ? `\nEmoji Usage:\n${emojiInstruction}` : ''}
 ${formatSpecificInstructions}
 
-Completed tasks:
+## CONTEXT: Completed Tasks with Full Implementation Details
+
+Below are the completed tasks with rich context including actual commits, changed files, and session insights. Use this information to write accurate, specific changelog entries that reflect what was ACTUALLY implemented (not just what was planned).
+
 ${taskSummaries}
 
-${request.customInstructions ? `Note: ${request.customInstructions}` : ''}
+${request.customInstructions ? `\n## Additional Instructions\n${request.customInstructions}` : ''}
 
-CRITICAL: Output ONLY the raw changelog content. Do NOT include ANY introductory text, analysis, or explanation. Start directly with the changelog heading (## or #). No "Here's the changelog" or similar phrases.`;
+## YOUR TASK
+
+You are writing release notes RIGHT NOW. Do NOT ask questions. Do NOT request more information.
+
+Use the task context above (commits, changed files, descriptions) to immediately generate a changelog with ${request.version} and date ${request.date}.
+
+Requirements:
+1. Use ONLY the information provided above - do not ask for more
+2. Accurately reflect what was ACTUALLY implemented (commits = ground truth)
+3. Group related changes logically
+4. Use the ${request.format} format
+5. Write for ${request.audience} audience
+
+START YOUR OUTPUT WITH THE VERSION HEADER (## or #) IMMEDIATELY.
+
+DO NOT:
+- Ask "What release would you like me to write notes for?"
+- Request version numbers or additional information
+- Include ANY introductory text or questions
+- Write "Here's the changelog" or similar phrases
+
+BEGIN THE CHANGELOG NOW:`;
 }
 
 /**

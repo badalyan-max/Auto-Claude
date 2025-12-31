@@ -702,7 +702,8 @@ if (typeof app?.on === 'function') {
  *
  * Priority:
  * 1. If venv is ready -> return venv Python (has all dependencies installed)
- * 2. Fall back to findPythonCommand() -> bundled or system Python
+ * 2. If venv Python exists on disk -> use it (handles race conditions during startup)
+ * 3. Fall back to findPythonCommand() -> bundled or system Python
  *
  * Note: For scripts that require dependencies (dotenv, claude-agent-sdk, etc.),
  * the venv Python MUST be used. Only use this fallback for scripts that
@@ -713,6 +714,24 @@ export function getConfiguredPythonPath(): string {
   if (pythonEnvManager.isEnvReady()) {
     const venvPath = pythonEnvManager.getPythonPath();
     if (venvPath) {
+      return venvPath;
+    }
+  }
+
+  // Even if manager isn't "ready" yet, check if the venv Python physically exists
+  // This handles race conditions where memory queries run before initialization completes
+  const knownVenvPaths = [
+    // Development mode: apps/backend/.venv
+    path.join(process.cwd(), 'apps', 'backend', '.venv', 
+      process.platform === 'win32' ? 'Scripts\\python.exe' : 'bin/python'),
+    // Also check relative to app path
+    path.resolve(__dirname, '..', '..', '..', '..', '..', 'backend', '.venv',
+      process.platform === 'win32' ? 'Scripts\\python.exe' : 'bin/python'),
+  ];
+
+  for (const venvPath of knownVenvPaths) {
+    if (existsSync(venvPath)) {
+      console.log(`[Python] Using existing venv Python: ${venvPath}`);
       return venvPath;
     }
   }

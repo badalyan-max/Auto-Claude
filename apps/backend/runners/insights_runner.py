@@ -32,6 +32,7 @@ except ImportError:
     ClaudeSDKClient = None
 
 from core.auth import ensure_claude_code_oauth_token, get_auth_token
+from core.claude_cli import find_claude_cli
 from debug import (
     debug,
     debug_detailed,
@@ -294,9 +295,12 @@ User: {message}
 Assistant:"""
 
     try:
+        # Find Claude CLI path
+        claude_cli = find_claude_cli()
+        
         # Try to use claude CLI with --print for simple output
         result = subprocess.run(
-            ["claude", "--print", "-p", full_prompt],
+            [claude_cli, "--print", "-p", full_prompt],
             capture_output=True,
             text=True,
             cwd=project_dir,

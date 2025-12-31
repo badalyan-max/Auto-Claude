@@ -1,0 +1,66 @@
+================================================================================
+   AUTO GIT SYNC - HIER STARTEN! 🚀
+================================================================================
+
+SCHNELLSTART (30 Sekunden):
+----------------------------
+
+1. Desktop-Verknüpfungen erstellen:
+   
+   .\Create-GitSync-Shortcut.ps1
+
+2. Doppelklick auf Desktop-Icon:
+   
+   "Auto Git Sync + Push.lnk" (empfohlen)
+
+3. Fertig! Läuft im Hintergrund.
+
+
+ODER Terminal-Befehl:
+---------------------
+
+python apps\backend\auto_git_sync.py --watch --auto-push
+
+
+WAS MACHT ES?
+-------------
+
+✅ Erkennt automatisch wenn Auto Claude Tasks fertig sind
+✅ Erstellt automatisch Git-Commits
+✅ Pusht automatisch zu GitHub (optional)
+✅ Erstellt automatisch Pull Requests (optional)
+✅ Spart 5-10 Minuten pro Task!
+
+
+EMPFOHLENE MODI:
+----------------
+
+Entwicklung (sicher):
+   python apps\backend\auto_git_sync.py --watch
+
+Production (vollautomatisch):
+   python apps\backend\auto_git_sync.py --watch --auto-push
+
+Volle Automation (mit PR):
+   python apps\backend\auto_git_sync.py --watch --auto-push --create-pr
+
+
+VOLLSTÄNDIGE ANLEITUNG:
+-----------------------
+
+Schnellstart (3 Min):     SCHNELLSTART-GIT-SYNC.md
+Vollständig:              AUTO-GIT-SYNC-ANLEITUNG.md
+Was jetzt?:               WAS-JETZT-AUTO-GIT-SYNC.md
+Cursor Integration:       .cursor\rules\auto-git-sync.mdc
+
+
+SUPPORT:
+--------
+
+Bei Problemen: AUTO-GIT-SYNC-ANLEITUNG.md (Abschnitt "Fehlerbehebung")
+
+
+================================================================================
+   Los geht's! Starte Auto Git Sync und arbeite wie gewohnt! ✨
+================================================================================
+

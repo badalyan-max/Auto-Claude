@@ -152,6 +152,23 @@ gh pr create --base main
 
 See [RELEASE.md](RELEASE.md) for detailed release process documentation.
 
+### Auto Git Sync
+```bash
+# Create desktop shortcuts
+.\Create-GitSync-Shortcut.ps1
+
+# Watch for done tasks and auto-commit
+python apps/backend/auto_git_sync.py --watch
+
+# Watch + auto-push to GitHub
+python apps/backend/auto_git_sync.py --watch --auto-push
+
+# Watch + auto-push + create PR
+python apps/backend/auto_git_sync.py --watch --auto-push --create-pr
+```
+
+See [SCHNELLSTART-GIT-SYNC.md](SCHNELLSTART-GIT-SYNC.md) for quick start guide.
+
 ## Architecture
 
 ### Core Pipeline
@@ -494,5 +511,20 @@ npm run dev      # Run in development mode (includes --remote-debugging-port=922
 3. Run QA: `python run.py --spec 001 --qa`
 4. QA agents will automatically interact with the running app for testing
 
+**Auto Git Sync (Automatic Git Operations):**
+```bash
+# Watch Mode - Auto-commit when tasks are done
+python apps/backend/auto_git_sync.py --watch
+
+# Watch Mode + Auto-Push
+python apps/backend/auto_git_sync.py --watch --auto-push
+
+# One-time check
+python apps/backend/auto_git_sync.py --check-done
+
+# Desktop shortcuts available - see SCHNELLSTART-GIT-SYNC.md
+```
+
 **Project data storage:**
 - `.auto-claude/specs/` - Per-project data (specs, plans, QA reports, memory) - gitignored
+- `.auto-claude/git_sync_state.json` - Auto Git Sync state tracking

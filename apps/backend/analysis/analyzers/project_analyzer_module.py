@@ -122,7 +122,81 @@ class ProjectAnalyzer:
             if service_info.get("language"):
                 services["main"] = service_info
 
+        # Check for Supabase backend (even in single projects)
+        supabase_service = self._analyze_supabase()
+        if supabase_service:
+            services["supabase"] = supabase_service
+
         self.index["services"] = services
+
+    def _analyze_supabase(self) -> dict[str, Any] | None:
+        """Analyze Supabase backend-as-a-service if present."""
+        supabase_dir = self.project_dir / "supabase"
+        if not supabase_dir.exists():
+            return None
+
+        config_file = supabase_dir / "config.toml"
+        functions_dir = supabase_dir / "functions"
+        migrations_dir = supabase_dir / "migrations"
+
+        if not config_file.exists():
+            return None
+
+        service_info: dict[str, Any] = {
+            "name": "supabase",
+            "path": str(supabase_dir),
+            "language": "TypeScript",  # Supabase Edge Functions use Deno/TypeScript
+            "framework": "Supabase",
+            "type": "backend",
+            "runtime": "Deno",
+            "key_directories": {},
+        }
+
+        # Analyze Edge Functions
+        if functions_dir.exists():
+            edge_functions = []
+            for func_dir in functions_dir.iterdir():
+                if func_dir.is_dir() and not func_dir.name.startswith("_"):
+                    # Check for index.ts file (standard Supabase function structure)
+                    index_file = func_dir / "index.ts"
+                    if index_file.exists():
+                        edge_functions.append(func_dir.name)
+                    else:
+                        # Also check for other .ts files
+                        ts_files = list(func_dir.glob("*.ts"))
+                        if ts_files:
+                            edge_functions.append(func_dir.name)
+
+            if edge_functions:
+                service_info["edge_functions"] = edge_functions
+                service_info["key_directories"]["functions"] = {
+                    "path": "supabase/functions",
+                    "purpose": "Edge Functions (serverless backend)",
+                }
+
+        # Analyze Database Migrations
+        if migrations_dir.exists():
+            migrations = []
+            for migration_file in sorted(migrations_dir.glob("*.sql")):
+                migrations.append(migration_file.name)
+
+            if migrations:
+                service_info["migrations"] = migrations
+                service_info["key_directories"]["migrations"] = {
+                    "path": "supabase/migrations",
+                    "purpose": "Database migrations",
+                }
+                service_info["has_database"] = True
+
+        # Parse config.toml for additional info
+        try:
+            config_content = config_file.read_text()
+            if "project_id" in config_content:
+                service_info["configured"] = True
+        except (OSError, UnicodeDecodeError):
+            pass
+
+        return service_info
 
     def _analyze_infrastructure(self) -> None:
         """Analyze infrastructure configuration."""
@@ -179,6 +253,27 @@ class ProjectAnalyzer:
             if (self.project_dir / file).exists():
                 infra["deployment"] = platform
                 break
+
+        # Supabase backend-as-a-service
+        supabase_dir = self.project_dir / "supabase"
+        if supabase_dir.exists() and (supabase_dir / "config.toml").exists():
+            infra["backend_service"] = "Supabase"
+            infra["supabase"] = {
+                "config": "supabase/config.toml",
+            }
+            # Check for Edge Functions
+            functions_dir = supabase_dir / "functions"
+            if functions_dir.exists():
+                functions = [
+                    d.name for d in functions_dir.iterdir()
+                    if d.is_dir() and not d.name.startswith("_")
+                ]
+                if functions:
+                    infra["supabase"]["edge_functions"] = functions
+            # Check for migrations
+            migrations_dir = supabase_dir / "migrations"
+            if migrations_dir.exists():
+                infra["supabase"]["has_migrations"] = True
 
         self.index["infrastructure"] = infra
 
