@@ -324,24 +324,59 @@ BASE_COMMANDS: set[str] = {
     "Invoke-Command",
     "Invoke-Expression",
     "Invoke-WebRequest",
-    # Database administration (full access)
+    # Database administration (full access - all DB clients)
+    # PostgreSQL
+    "psql",
     "dropdb",
     "createdb",
     "dropuser",
     "createuser",
     "pg_dump",
     "pg_restore",
+    "pg_dumpall",
     "pg_ctl",
+    "pg_isready",
+    "initdb",
+    "postgres",
+    # MySQL / MariaDB
+    "mysql",
+    "mariadb",
     "mysqldump",
+    "mariadb-dump",
     "mysqladmin",
     "mysqlimport",
+    "mysqlcheck",
+    "mysqlshow",
+    # MongoDB
     "mongodump",
     "mongorestore",
+    "mongoexport",
+    "mongoimport",
     "mongo",
     "mongosh",
+    "mongod",
+    "mongos",
+    # Redis
     "redis-cli",
     "redis-server",
+    "redis-benchmark",
+    # SQLite
     "sqlite3",
+    "sqlite",
+    # Other databases
+    "cqlsh",  # Cassandra
+    "cypher-shell",  # Neo4j
+    "neo4j-admin",
+    "clickhouse-client",
+    "influx",
+    "cockroach",
+    # ORMs & Migration tools
+    "prisma",
+    "drizzle-kit",
+    "typeorm",
+    "sequelize",
+    "knex",
+    "alembic",
     # Container & orchestration
     "docker",
     "docker-compose",
