@@ -1,8 +1,7 @@
 {
-  "last_sync": "2025-12-31T22:03:48.697932",
-  "total_syncs": 15,
+  "last_sync": "2025-12-31T22:04:50.346224",
+  "total_syncs": 16,
   "last_files": [
-    "apps/backend/agents/tools_pkg/models.py",
-    "apps/backend/core/client.py"
+    "ERWEITERTE-AGENT-PERMISSIONS.md"
   ]
 }
