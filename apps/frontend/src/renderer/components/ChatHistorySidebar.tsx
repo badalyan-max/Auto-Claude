@@ -7,7 +7,8 @@ import {
   Check,
   X,
   MoreVertical,
-  Loader2
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -39,6 +40,7 @@ interface ChatHistorySidebarProps {
   onSelectSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => Promise<boolean>;
   onRenameSession: (sessionId: string, newTitle: string) => Promise<boolean>;
+  onOpenAsTab?: (sessionId: string, title: string) => void;
 }
 
 export function ChatHistorySidebar({
@@ -48,7 +50,8 @@ export function ChatHistorySidebar({
   onNewSession,
   onSelectSession,
   onDeleteSession,
-  onRenameSession
+  onRenameSession,
+  onOpenAsTab
 }: ChatHistorySidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
