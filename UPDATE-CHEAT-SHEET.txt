@@ -1,0 +1,116 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   🔄 AUTO CLAUDE - UPDATE CHEAT SHEET                        ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────┐
+│ 🎯 UPDATES HOLEN (Wähle eine Methode)                        │
+└───────────────────────────────────────────────────────────────┘
+
+  Methode 1: Desktop (Einfachste!) 🖱️
+  ────────────────────────────────────
+  → Doppelklick: "Update Auto Claude"
+  
+  Methode 2: Terminal 💻
+  ─────────────────────
+  cd c:\Projekte\auto-claude
+  .\Update-Von-Original.bat
+
+┌───────────────────────────────────────────────────────────────┐
+│ 📊 DEINE GIT-STRUKTUR                                         │
+└───────────────────────────────────────────────────────────────┘
+
+  upstream → https://github.com/AndyMik90/auto-claude
+             (Original-Entwickler - Neue Features)
+  
+  origin   → https://github.com/badalyan-max/Auto-Claude
+             (Dein Fork - Deine Änderungen)
+  
+  lokal    → c:\Projekte\auto-claude
+             (Dein Arbeitsverzeichnis)
+
+┌───────────────────────────────────────────────────────────────┐
+│ 🚀 HÄUFIGSTE BEFEHLE                                          │
+└───────────────────────────────────────────────────────────────┘
+
+  Status prüfen:
+    git status
+  
+  Änderungen speichern:
+    git add -A
+    git commit -m "Meine Änderungen"
+    git push origin develop
+  
+  Updates prüfen (ohne zu holen):
+    git fetch upstream
+    git log develop..upstream/develop
+  
+  Letzte Commits ansehen:
+    git log --oneline -10
+
+┌───────────────────────────────────────────────────────────────┐
+│ ⚠️ MERGE-KONFLIKT LÖSEN                                       │
+└───────────────────────────────────────────────────────────────┘
+
+  1. Öffne Datei in Editor
+  2. Suche nach: <<<<<<< HEAD
+  3. Zwischen <<< und === = Dein Code
+  4. Zwischen === und >>> = Original Code
+  5. Entscheide welche Version (oder beide)
+  6. Lösche Marker (<<<, ===, >>>)
+  7. Speichern
+  8. git add .
+  9. git commit -m "Konflikt gelöst"
+  10. git push origin develop
+
+┌───────────────────────────────────────────────────────────────┐
+│ 🆘 NOTFALL-BEFEHLE                                            │
+└───────────────────────────────────────────────────────────────┘
+
+  Letzten Merge rückgängig:
+    git reset --hard HEAD^
+  
+  Zurück zum letzten Stand:
+    git reset --hard origin/develop
+  
+  Alle Änderungen verwerfen:
+    git checkout -- .
+    git clean -fd
+
+┌───────────────────────────────────────────────────────────────┐
+│ 🔗 WICHTIGE LINKS                                             │
+└───────────────────────────────────────────────────────────────┘
+
+  Dein Fork:
+    https://github.com/badalyan-max/Auto-Claude
+  
+  Original:
+    https://github.com/AndyMik90/auto-claude
+  
+  Ausführliche Anleitung:
+    c:\Projekte\auto-claude\UPDATE-ANLEITUNG.md
+
+┌───────────────────────────────────────────────────────────────┐
+│ ✅ AUTOMATISCHE UPDATE-VORGANG                                │
+└───────────────────────────────────────────────────────────────┘
+
+  Das Skript macht automatisch:
+    1. ✓ Prüft ob lokale Änderungen vorhanden
+    2. ✓ Committed sie ggf. für dich
+    3. ✓ Holt neue Features vom Original
+    4. ✓ Kombiniert mit deinen Änderungen
+    5. ✓ Pushed zu deinem Fork
+    6. ✓ Zeigt Zusammenfassung
+  
+  Du musst nur:
+    → Doppelklicken
+    → Bei Fragen mit Enter bestätigen
+    → Fertig! 🎉
+
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║  📝 MERKE: Deine Änderungen werden NIE überschrieben!        ║
+║      Git kombiniert intelligent Original + Deine Arbeit       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝

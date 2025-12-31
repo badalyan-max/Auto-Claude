@@ -192,6 +192,7 @@ See [SCHNELLSTART-GIT-SYNC.md](SCHNELLSTART-GIT-SYNC.md) for quick start guide.
 - **core/auth.py** - OAuth token management for Claude SDK authentication
 - **agents/** - Agent implementations (planner, coder, qa_reviewer, qa_fixer)
 - **spec_agents/** - Spec creation agents (gatherer, researcher, writer, critic)
+- **git_change_detector.py** - Automatic Git change detection for external modifications (e.g., Lovable syncs)
 
 **Memory & Context:**
 - **integrations/graphiti/** - Graphiti memory system (mandatory)
@@ -203,6 +204,11 @@ See [SCHNELLSTART-GIT-SYNC.md](SCHNELLSTART-GIT-SYNC.md) for quick start guide.
 - **graphiti_config.py** - Configuration and validation for Graphiti integration
 - **graphiti_providers.py** - Multi-provider factory (OpenAI, Anthropic, Azure, Ollama, Google AI)
 - **agents/memory_manager.py** - Session memory orchestration
+- **git_change_detector.py** - Git change detection for external modifications
+  - Automatically detects commits since last project index refresh
+  - Provides Git context to AI agents (Roadmap, Ideation, Insights)
+  - Triggers index refresh for code changes
+  - See `GIT-ÄNDERUNGEN-ERKENNUNG.md` for details
 
 **Workspace & Security:**
 - **cli/worktree.py** - Git worktree isolation for safe feature development
