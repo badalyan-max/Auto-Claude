@@ -33,11 +33,13 @@ import {
   renameSession,
   updateModelConfig,
   createTaskFromSuggestion,
-  setupInsightsListeners
+  setupInsightsListeners,
+  openSessionAsTab
 } from '../stores/insights-store';
 import { loadTasks } from '../stores/task-store';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
 import { InsightsModelSelector } from './InsightsModelSelector';
+import { InsightsTabBar } from './InsightsTabBar';
 import type { InsightsChatMessage, InsightsModelConfig } from '../../shared/types';
 import {
   TASK_CATEGORY_LABELS,
@@ -95,6 +97,11 @@ export function Insights({ projectId }: InsightsProps) {
   const streamingContent = useInsightsStore((state) => state.streamingContent);
   const currentTool = useInsightsStore((state) => state.currentTool);
   const isLoadingSessions = useInsightsStore((state) => state.isLoadingSessions);
+  const openTabs = useInsightsStore((state) => state.openTabs);
+  const activeTabId = useInsightsStore((state) => state.activeTabId);
+  const openTab = useInsightsStore((state) => state.openTab);
+  const closeTab = useInsightsStore((state) => state.closeTab);
+  const setActiveTab = useInsightsStore((state) => state.setActiveTab);
 
   const [inputValue, setInputValue] = useState('');
   const [creatingTask, setCreatingTask] = useState<string | null>(null);
@@ -189,6 +196,35 @@ export function Insights({ projectId }: InsightsProps) {
       await updateModelConfig(projectId, session.id, config);
     }
   };
+  const handleTabSelect = async (sessionId: string) => {
+    setActiveTab(sessionId);
+    if (sessionId !== session?.id) {
+      await switchSession(projectId, sessionId);
+    }
+  };
+
+  const handleTabClose = (sessionId: string) => {
+    closeTab(sessionId);
+    const store = useInsightsStore.getState();
+    if (store.activeTabId && store.activeTabId !== session?.id) {
+      switchSession(projectId, store.activeTabId);
+    }
+  };
+
+  const handleNewTab = async () => {
+    const newSess = await newSession(projectId);
+    if (newSess) {
+      openTab(newSess.id, newSess.title || 'New Chat');
+    }
+    setTaskCreated(new Set());
+    textareaRef.current?.focus();
+  };
+
+  const handleOpenSessionAsTab = async (sessionId: string, title: string) => {
+    await openSessionAsTab(projectId, sessionId, title);
+  };
+
+
 
   const isLoading = status.phase === 'thinking' || status.phase === 'streaming';
   const messages = session?.messages || [];
@@ -205,6 +241,7 @@ export function Insights({ projectId }: InsightsProps) {
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
           onRenameSession={handleRenameSession}
+          onOpenAsTab={handleOpenSessionAsTab}
         />
       )}
 
@@ -252,6 +289,17 @@ export function Insights({ projectId }: InsightsProps) {
             </Button>
           </div>
         </div>
+
+        {/* Tab Bar */}
+        {openTabs.length > 0 && (
+          <InsightsTabBar
+            tabs={openTabs}
+            activeTabId={activeTabId}
+            onTabSelect={handleTabSelect}
+            onTabClose={handleTabClose}
+            onNewTab={handleNewTab}
+          />
+        )}
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-6 py-4">
