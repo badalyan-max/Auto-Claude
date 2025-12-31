@@ -254,6 +254,13 @@ AGENT_CONFIGS = {
         "auto_claude_tools": [],
         "thinking_default": "low",
     },
+    "merge_reviewer": {
+        # Full review capabilities for Smart Push: conflict detection, quality check, tests
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],  # For documentation lookup during review
+        "auto_claude_tools": [],
+        "thinking_default": "medium",  # Medium thinking for review decisions
+    },
     "commit_message": {
         "tools": [],
         "mcp_servers": [],
