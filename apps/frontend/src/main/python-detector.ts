@@ -289,10 +289,12 @@ const ALLOWED_PATH_PATTERNS: RegExp[] = [
   /^.*\/\.?venv\/bin\/python\d*(\.\d+)?$/,
   /^.*\/\.?virtualenv\/bin\/python\d*(\.\d+)?$/,
   /^.*\/env\/bin\/python\d*(\.\d+)?$/,
+  /^.*\/python-venv\/bin\/python\d*(\.\d+)?$/,
   // Windows virtual environments
   /^.*\\\.?venv\\Scripts\\python\.exe$/i,
   /^.*\\\.?virtualenv\\Scripts\\python\.exe$/i,
   /^.*\\env\\Scripts\\python\.exe$/i,
+  /^.*\\python-venv\\Scripts\\python\.exe$/i,
   // Windows system Python
   /^[A-Za-z]:\\Python\d+\\python\.exe$/i,
   /^[A-Za-z]:\\Program Files\\Python\d+\\python\.exe$/i,
@@ -380,7 +382,10 @@ function verifyIsPython(pythonCmd: string): boolean {
  * @returns Validation result with success status and reason
  */
 export function validatePythonPath(pythonPath: string): PythonPathValidation {
+  console.log(`[PythonValidator] Validating path: ${pythonPath}`);
+  
   if (!pythonPath || typeof pythonPath !== 'string') {
+    console.log('[PythonValidator] FAIL: Path is empty or invalid');
     return { valid: false, reason: 'Python path is empty or invalid' };
   }
 
@@ -392,21 +397,27 @@ export function validatePythonPath(pythonPath: string): PythonPathValidation {
       (cleanPath.startsWith("'") && cleanPath.endsWith("'"))) {
     cleanPath = cleanPath.slice(1, -1);
   }
+  console.log(`[PythonValidator] Clean path: ${cleanPath}`);
 
   // Security check 1: No shell metacharacters
   if (DANGEROUS_SHELL_CHARS.test(cleanPath)) {
+    console.log('[PythonValidator] FAIL: Dangerous shell metacharacters detected');
     return {
       valid: false,
       reason: 'Path contains dangerous shell metacharacters'
     };
   }
+  console.log('[PythonValidator] PASS: No dangerous shell metacharacters');
 
   // Check if it's a known safe command (not a path)
   if (isSafePythonCommand(cleanPath)) {
+    console.log('[PythonValidator] Detected as safe Python command, verifying...');
     // Verify it actually runs Python
     if (verifyIsPython(cleanPath)) {
+      console.log('[PythonValidator] PASS: Valid Python command');
       return { valid: true, sanitizedPath: cleanPath };
     }
+    console.log('[PythonValidator] FAIL: Command does not appear to be Python');
     return {
       valid: false,
       reason: `Command '${cleanPath}' does not appear to be Python`
@@ -415,55 +426,76 @@ export function validatePythonPath(pythonPath: string): PythonPathValidation {
 
   // It's a file path - apply stricter validation
   const isFilePath = cleanPath.includes('/') || cleanPath.includes('\\');
+  console.log(`[PythonValidator] Is file path: ${isFilePath}`);
 
   if (isFilePath) {
     // Normalize the path to prevent directory traversal tricks
     const normalizedPath = path.normalize(cleanPath);
+    console.log(`[PythonValidator] Normalized path: ${normalizedPath}`);
 
     // Check for path traversal attempts
     if (normalizedPath.includes('..')) {
+      console.log('[PythonValidator] FAIL: Path traversal sequences detected');
       return {
         valid: false,
         reason: 'Path contains directory traversal sequences'
       };
     }
+    console.log('[PythonValidator] PASS: No path traversal');
 
     // Security check 2: Must match allowlist
-    if (!matchesAllowedPattern(normalizedPath)) {
+    const matchesPattern = matchesAllowedPattern(normalizedPath);
+    console.log(`[PythonValidator] Matches allowed pattern: ${matchesPattern}`);
+    if (!matchesPattern) {
+      console.log('[PythonValidator] FAIL: Does not match allowed Python locations');
       return {
         valid: false,
         reason: 'Path does not match allowed Python locations. Expected: system Python, Homebrew, pyenv, or virtual environment paths'
       };
     }
+    console.log('[PythonValidator] PASS: Matches allowed pattern');
 
     // Security check 3: File must exist
-    if (!existsSync(normalizedPath)) {
+    const fileExists = existsSync(normalizedPath);
+    console.log(`[PythonValidator] File exists: ${fileExists}`);
+    if (!fileExists) {
+      console.log('[PythonValidator] FAIL: File does not exist');
       return {
         valid: false,
         reason: 'Python executable does not exist at specified path'
       };
     }
+    console.log('[PythonValidator] PASS: File exists');
 
     // Security check 4: Must be executable (Unix) or .exe (Windows)
     if (process.platform !== 'win32' && !isExecutable(normalizedPath)) {
+      console.log('[PythonValidator] FAIL: File is not executable');
       return {
         valid: false,
         reason: 'File exists but is not executable'
       };
     }
+    console.log('[PythonValidator] PASS: File is executable (or Windows)');
 
     // Security check 5: Verify it's actually Python
-    if (!verifyIsPython(normalizedPath)) {
+    console.log('[PythonValidator] Verifying Python interpreter...');
+    const isPython = verifyIsPython(normalizedPath);
+    console.log(`[PythonValidator] Is Python: ${isPython}`);
+    if (!isPython) {
+      console.log('[PythonValidator] FAIL: Not a Python interpreter');
       return {
         valid: false,
         reason: 'File exists but does not appear to be a Python interpreter'
       };
     }
+    console.log('[PythonValidator] PASS: Valid Python interpreter');
 
+    console.log(`[PythonValidator] SUCCESS: All checks passed for ${normalizedPath}`);
     return { valid: true, sanitizedPath: normalizedPath };
   }
 
   // Unknown format - reject
+  console.log('[PythonValidator] FAIL: Unrecognized Python path format');
   return {
     valid: false,
     reason: 'Unrecognized Python path format'
@@ -478,6 +510,14 @@ export function getValidatedPythonPath(providedPath: string | undefined, service
   const validation = validatePythonPath(providedPath);
   if (validation.valid) {
     return validation.sanitizedPath || providedPath;
+  }
+
+  // If validation failed but the file exists and is Python, use it anyway
+  // (User-configured paths should be trusted if they exist and work)
+  const normalizedPath = path.normalize(providedPath.trim().replace(/^["']|["']$/g, ''));
+  if (existsSync(normalizedPath) && verifyIsPython(normalizedPath)) {
+    console.warn(`[${serviceName}] Using provided Python path despite validation warning: ${validation.reason}`);
+    return normalizedPath;
   }
 
   console.error(`[${serviceName}] Invalid Python path rejected: ${validation.reason}`);

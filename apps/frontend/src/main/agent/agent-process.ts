@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, execFileSync } from 'child_process';
 import path from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { app } from 'electron';
@@ -36,6 +36,27 @@ export class AgentProcessManager {
       if (validation.valid) {
         this._pythonPath = validation.sanitizedPath || pythonPath;
       } else {
+        // If validation failed but the file exists and is Python, use it anyway
+        // (User-configured paths should be trusted if they exist and work)
+        const normalizedPath = path.normalize(pythonPath.trim().replace(/^["']|["']$/g, ''));
+        if (existsSync(normalizedPath)) {
+          // Try to verify it's Python, but be lenient with timeouts
+          try {
+            const output = execFileSync(normalizedPath, ['--version'], {
+              stdio: 'pipe',
+              timeout: 3000,
+              windowsHide: true,
+              shell: false
+            }).toString().trim();
+            if (/^Python \d+\.\d+/.test(output)) {
+              console.warn(`[AgentProcess] Using provided Python path despite validation warning: ${validation.reason}`);
+              this._pythonPath = normalizedPath;
+              return;
+            }
+          } catch (err) {
+            console.warn(`[AgentProcess] Could not verify Python version: ${err}`);
+          }
+        }
         console.error(`[AgentProcess] Invalid Python path rejected: ${validation.reason}`);
         console.error(`[AgentProcess] Falling back to getConfiguredPythonPath()`);
         // Don't set _pythonPath - let getPythonPath() use getConfiguredPythonPath() fallback

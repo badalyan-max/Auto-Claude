@@ -33,7 +33,7 @@ def get_project_index_path(project_dir: Path) -> Path:
     return project_dir / ".auto-claude" / "project_index.json"
 
 
-def should_refresh_index(project_dir: Path, force: bool = False) -> bool:
+def should_refresh_index(project_dir: Path, force: bool = False, check_git: bool = True) -> bool:
     """
     Determine if the project index should be refreshed.
 
@@ -42,10 +42,12 @@ def should_refresh_index(project_dir: Path, force: bool = False) -> bool:
     2. If index doesn't exist, refresh
     3. If index is older than MAX_INDEX_AGE_SECONDS, refresh
     4. If any trigger files are newer than index, refresh
+    5. If check_git=True, check for code changes in Git history
 
     Args:
         project_dir: Root directory of the project
         force: Force refresh regardless of age/changes
+        check_git: Check Git history for code changes (default: True)
 
     Returns:
         True if index should be refreshed
@@ -86,6 +88,17 @@ def should_refresh_index(project_dir: Path, force: bool = False) -> bool:
         elif trigger_path.is_file():
             if trigger_path.stat().st_mtime > index_mtime:
                 return True
+
+    # Check Git history for code changes (NEW!)
+    if check_git:
+        try:
+            from git_change_detector import should_refresh_for_git_changes
+            
+            if should_refresh_for_git_changes(project_dir):
+                return True
+        except Exception:
+            # Git check failed, continue without it
+            pass
 
     return False
 

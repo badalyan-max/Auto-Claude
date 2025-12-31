@@ -45,7 +45,23 @@ class ProjectAnalyzer:
             "tech_stack": [],
             "target_audience": None,
             "planned_features": [],
+            "git_changes": None,  # NEW: Git changes since last index
         }
+
+        # Get Git changes context (NEW!)
+        try:
+            from git_change_detector import get_git_changes
+            
+            git_summary = get_git_changes(self.project_dir)
+            if git_summary.has_changes:
+                context["git_changes"] = {
+                    "commits": git_summary.commits_since_index,
+                    "changed_files": len(git_summary.changed_files),
+                    "summary": git_summary.summary,
+                    "recent_commits": git_summary.recent_commits[:5],  # Top 5
+                }
+        except Exception:
+            pass
 
         # Get project index (from .auto-claude - the installed instance)
         project_index_path = self.project_dir / ".auto-claude" / "project_index.json"

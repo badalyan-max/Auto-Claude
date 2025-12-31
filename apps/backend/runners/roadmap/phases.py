@@ -151,7 +151,7 @@ class DiscoveryPhase:
 
     def _build_context(self) -> str:
         """Build context string for the discovery agent."""
-        return f"""
+        base_context = f"""
 **Project Index**: {self.project_index_file}
 **Output Directory**: {self.output_dir}
 **Output File**: {self.discovery_file}
@@ -165,6 +165,20 @@ Your task:
 
 Do NOT ask questions. Make educated inferences and create the file.
 """
+        
+        # Add Git changes context if available
+        try:
+            from git_change_detector import get_git_context_for_agent
+            project_dir = self.output_dir.parent.parent if (self.output_dir.parent.parent / ".git").exists() else self.output_dir.parent
+            git_context = get_git_context_for_agent(project_dir)
+            
+            if git_context:
+                base_context += f"\n\n{git_context}"
+        except Exception:
+            # Git context not available, continue without it
+            pass
+        
+        return base_context
 
     def _validate_discovery(self, attempt: int) -> RoadmapPhaseResult | None:
         """Validate the discovery file.

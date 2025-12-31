@@ -419,11 +419,39 @@ def fix_stuck_tasks(project_dir: Path):
                 print_error(f"Fehler beim Zurücksetzen von {task['spec_id']}: {e}")
 
 
+def check_git_changes(project_dir: Path) -> dict:
+    """
+    Prüft ob Git-Änderungen seit letztem Project-Index-Refresh vorliegen.
+    
+    Returns:
+        Dict mit Änderungsinformationen
+    """
+    try:
+        from git_change_detector import GitChangeDetector
+        
+        detector = GitChangeDetector(project_dir)
+        changes = detector.get_changes_since_index()
+        
+        return {
+            "has_changes": changes.has_changes,
+            "commits": changes.commits_since_index,
+            "changed_files": len(changes.changed_files),
+            "should_refresh": detector.should_refresh_index_for_changes(),
+            "summary": changes.summary,
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "has_changes": False,
+        }
+
+
 def main():
     parser = argparse.ArgumentParser(description="Auto Claude System Diagnose")
     parser.add_argument("--fix-memory", action="store_true", help="Memory Konfiguration reparieren")
     parser.add_argument("--fix-stuck-tasks", action="store_true", help="Hängende Tasks reparieren")
     parser.add_argument("--check-github", action="store_true", help="GitHub Konfiguration überprüfen")
+    parser.add_argument("--check-git-changes", action="store_true", help="Git-Änderungen seit letztem Index prüfen")
     
     args = parser.parse_args()
     
@@ -485,9 +513,28 @@ def main():
     else:
         print_success("Keine Worktrees vorhanden")
     
-    # 6. GitHub Configuration
+    # 6. Git Changes (NEW!)
+    if args.check_git_changes:
+        print_header("6️⃣  Git-Änderungen seit letztem Index")
+        git_status = check_git_changes(project_dir)
+        
+        if "error" in git_status:
+            print_error(f"Fehler beim Prüfen: {git_status['error']}")
+        elif git_status["has_changes"]:
+            print_warning(f"{git_status['commits']} neue Commit(s), {git_status['changed_files']} Datei(en) geändert")
+            print()
+            print(git_status["summary"])
+            
+            if git_status["should_refresh"]:
+                print()
+                print_warning("⚠️  Index-Refresh empfohlen für Code-Änderungen!")
+                print_info("Tipp: Der Index wird automatisch beim nächsten Roadmap/Ideation-Run aktualisiert")
+        else:
+            print_success("Keine Git-Änderungen seit letztem Index-Refresh")
+    
+    # 7. GitHub Configuration
     if args.check_github:
-        print_header("6️⃣  GitHub Konfiguration")
+        print_header("7️⃣  GitHub Konfiguration")
         github_ok = check_github_config()
         
         # Check for done tasks

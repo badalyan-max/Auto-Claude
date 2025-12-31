@@ -65,6 +65,16 @@ def load_project_context(project_dir: str) -> str:
         except Exception:
             pass
 
+    # Add Git changes context (NEW!)
+    try:
+        from git_change_detector import get_git_context_for_agent
+        
+        git_context = get_git_context_for_agent(Path(project_dir))
+        if git_context:
+            context_parts.append(git_context)
+    except Exception:
+        pass
+
     # Load roadmap if available
     roadmap_path = Path(project_dir) / ".auto-claude" / "roadmap" / "roadmap.json"
     if roadmap_path.exists():
