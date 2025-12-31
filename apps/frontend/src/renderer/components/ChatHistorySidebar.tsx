@@ -194,6 +194,7 @@ interface SessionItemProps {
   onCancelEdit: () => void;
   onEditTitleChange: (title: string) => void;
   onDelete: () => void;
+  onOpenAsTab?: () => void;
 }
 
 function SessionItem({
@@ -206,7 +207,8 @@ function SessionItem({
   onSaveEdit,
   onCancelEdit,
   onEditTitleChange,
-  onDelete
+  onDelete,
+  onOpenAsTab
 }: SessionItemProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
