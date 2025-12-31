@@ -1,4 +1,4 @@
-import { spawn, execSync, ChildProcess } from 'child_process';
+import { spawn, execSync, execFileSync, ChildProcess } from 'child_process';
 import { existsSync, readdirSync } from 'fs';
 import path from 'path';
 import { EventEmitter } from 'events';
@@ -115,6 +115,10 @@ export class PythonEnvManager extends EventEmitter {
    * Check if bundled packages are available and valid.
    * For packaged apps, we check if the bundled site-packages directory exists
    * and contains the marker file indicating successful bundling.
+   * 
+   * IMPORTANT: We also verify that critical packages can actually be imported,
+   * not just that they exist. This catches issues like missing pywin32 DLLs
+   * on Windows which cause import failures even when files exist.
    */
   private hasBundledPackages(): boolean {
     const sitePackagesPath = this.getBundledSitePackagesPath();
@@ -124,18 +128,51 @@ export class PythonEnvManager extends EventEmitter {
 
     // Check for the marker file that indicates successful bundling
     const markerPath = path.join(sitePackagesPath, '.bundled');
-    if (existsSync(markerPath)) {
-      console.log(`[PythonEnvManager] Found bundle marker, using bundled packages`);
-      return true;
-    }
+    const hasMarker = existsSync(markerPath);
 
-    // Fallback: check if key packages exist
-    // This handles cases where the marker might be missing but packages are there
+    // Check if key packages exist on disk
     const claudeSdkPath = path.join(sitePackagesPath, 'claude_agent_sdk');
     const dotenvPath = path.join(sitePackagesPath, 'dotenv');
-    if (existsSync(claudeSdkPath) || existsSync(dotenvPath)) {
-      console.log(`[PythonEnvManager] Found key packages, using bundled packages`);
-      return true;
+    const hasPackageFiles = existsSync(claudeSdkPath) || existsSync(dotenvPath);
+
+    if (!hasMarker && !hasPackageFiles) {
+      console.log(`[PythonEnvManager] No bundled packages found`);
+      return false;
+    }
+
+    // CRITICAL: Actually test if claude_agent_sdk can be imported
+    // This catches Windows-specific issues with pywin32 DLLs not being properly installed
+    const bundledPython = getBundledPythonPath();
+    if (!bundledPython) {
+      console.log(`[PythonEnvManager] Bundled Python not found`);
+      return false;
+    }
+
+    try {
+      // Set PYTHONPATH and try to import claude_agent_sdk
+      const testResult = execFileSync(bundledPython, [
+        '-c',
+        'import claude_agent_sdk; print("OK")'
+      ], {
+        timeout: 10000,
+        windowsHide: true,
+        env: {
+          ...process.env,
+          PYTHONPATH: sitePackagesPath,
+          PYTHONUNBUFFERED: '1'
+        }
+      }).toString().trim();
+
+      if (testResult === 'OK') {
+        console.log(`[PythonEnvManager] Bundled packages verified - claude_agent_sdk imports successfully`);
+        return true;
+      }
+    } catch (error) {
+      // Import failed - bundled packages are broken
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.warn(`[PythonEnvManager] Bundled packages BROKEN - claude_agent_sdk import failed: ${errorMsg}`);
+      console.warn(`[PythonEnvManager] Will fall back to venv-based setup`);
+      return false;
     }
 
     return false;
