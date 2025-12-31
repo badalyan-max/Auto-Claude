@@ -291,9 +291,29 @@ class WorktreeManager:
 
         return stats
 
+    def _is_branch_merged(self, branch_name: str) -> bool:
+        """
+        Check if a branch is merged into the base branch.
+        
+        Returns:
+            True if branch is fully merged, False otherwise
+        """
+        result = self._run_git(["branch", "--merged", self.base_branch])
+        if result.returncode != 0:
+            return False
+        
+        # Check if our branch is in the list of merged branches
+        merged_branches = result.stdout.strip().split("\n")
+        return any(branch_name in line for line in merged_branches)
+
     def create_worktree(self, spec_name: str) -> WorktreeInfo:
         """
         Create a worktree for a spec.
+        
+        Smart Branch Re-Use (Option A):
+        - If branch exists and is merged → Delete and recreate (safe)
+        - If branch exists and not merged → Reuse existing work (preserve user work)
+        - If branch doesn't exist → Create new
 
         Args:
             spec_name: The spec folder name (e.g., "002-implement-memory")
@@ -320,24 +340,46 @@ class WorktreeManager:
                 f"  git branch -m {conflicting_branch} {conflicting_branch}-backup"
             )
 
-        # Remove existing if present (from crashed previous run)
+        # Remove existing worktree if present (from crashed previous run)
         if worktree_path.exists():
             self._run_git(["worktree", "remove", "--force", str(worktree_path)])
 
-        # Delete branch if it exists (from previous attempt)
-        self._run_git(["branch", "-D", branch_name])
+        # OPTION A: Smart Branch Re-Use
+        # Check if branch exists
+        result = self._run_git(["rev-parse", "--verify", branch_name])
+        branch_exists = result.returncode == 0
 
-        # Create worktree with new branch from base
-        result = self._run_git(
-            ["worktree", "add", "-b", branch_name, str(worktree_path), self.base_branch]
-        )
+        if branch_exists:
+            # Branch exists - check if it's merged
+            if self._is_branch_merged(branch_name):
+                # Merged = safe to delete and recreate
+                print(f"ℹ️  Branch {branch_name} is merged - recreating fresh")
+                self._run_git(["branch", "-D", branch_name])
+                branch_exists = False
+            else:
+                # Not merged = reuse to preserve work
+                print(f"♻️  Branch {branch_name} exists with unmerged work - reusing")
+
+        # Create or checkout worktree
+        if branch_exists:
+            # Reuse existing branch (has unmerged work)
+            result = self._run_git(
+                ["worktree", "add", str(worktree_path), branch_name]
+            )
+            action = "Reused existing"
+        else:
+            # Create new branch from base
+            result = self._run_git(
+                ["worktree", "add", "-b", branch_name, str(worktree_path), self.base_branch]
+            )
+            action = "Created new"
 
         if result.returncode != 0:
             raise WorktreeError(
                 f"Failed to create worktree for {spec_name}: {result.stderr}"
             )
 
-        print(f"Created worktree: {worktree_path.name} on branch {branch_name}")
+        print(f"{action} worktree: {worktree_path.name} on branch {branch_name}")
 
         return WorktreeInfo(
             path=worktree_path,
