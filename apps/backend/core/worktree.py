@@ -797,6 +797,203 @@ class WorktreeManager:
         result = self._run_git(["status", "--porcelain"], cwd=cwd)
         return bool(result.stdout.strip())
 
+    # ==================== Smart Push Methods ====================
+    # These methods support the Smart Push tool for AI-reviewed merges
+    
+    def get_done_unmerged_specs(self, specs_dir: Path | None = None) -> list[dict]:
+        """
+        Find all specs that are done but not yet merged into main.
+        
+        Args:
+            specs_dir: Path to specs directory (default: project_dir/.auto-claude/specs/)
+            
+        Returns:
+            List of dicts with spec info: {name, branch, spec_dir, plan, is_merged}
+        """
+        import json
+        
+        if specs_dir is None:
+            specs_dir = self.project_dir / ".auto-claude" / "specs"
+        
+        if not specs_dir.exists():
+            return []
+        
+        done_specs = []
+        
+        for spec_dir in specs_dir.iterdir():
+            if not spec_dir.is_dir():
+                continue
+            
+            plan_file = spec_dir / "implementation_plan.json"
+            if not plan_file.exists():
+                continue
+            
+            try:
+                plan = json.loads(plan_file.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            
+            # Check if done
+            status = plan.get("status", "")
+            plan_status = plan.get("planStatus", "")
+            
+            is_done = False
+            if status == "done":
+                is_done = True
+            elif status == "human_review" and plan_status == "review":
+                # Check if all subtasks completed
+                all_completed = True
+                for phase in plan.get("phases", []):
+                    for subtask in phase.get("subtasks", []):
+                        if subtask.get("status") != "completed":
+                            all_completed = False
+                            break
+                    if not all_completed:
+                        break
+                if all_completed:
+                    is_done = True
+            
+            if not is_done:
+                continue
+            
+            # Check if branch exists
+            branch_name = self.get_branch_name(spec_dir.name)
+            result = self._run_git(["rev-parse", "--verify", branch_name])
+            if result.returncode != 0:
+                continue  # No branch, skip
+            
+            # Check if already merged
+            is_merged = self._is_branch_merged(branch_name)
+            
+            if not is_merged:
+                done_specs.append({
+                    "name": spec_dir.name,
+                    "branch": branch_name,
+                    "spec_dir": spec_dir,
+                    "plan": plan,
+                    "feature": plan.get("feature", "Unknown Feature"),
+                    "is_merged": False,
+                })
+        
+        return done_specs
+    
+    def get_branch_diff_stats(self, branch_name: str) -> dict:
+        """
+        Get statistics about changes in a branch compared to main.
+        
+        Returns:
+            Dict with: files_changed, additions, deletions, commits
+        """
+        stats = {
+            "files_changed": 0,
+            "additions": 0,
+            "deletions": 0,
+            "commits": 0,
+        }
+        
+        # Get file count
+        result = self._run_git(["diff", "--shortstat", f"{self.base_branch}...{branch_name}"])
+        if result.returncode == 0 and result.stdout:
+            # Parse: " 5 files changed, 100 insertions(+), 20 deletions(-)"
+            output = result.stdout.strip()
+            import re
+            
+            files_match = re.search(r"(\d+) files? changed", output)
+            if files_match:
+                stats["files_changed"] = int(files_match.group(1))
+            
+            add_match = re.search(r"(\d+) insertions?\(\+\)", output)
+            if add_match:
+                stats["additions"] = int(add_match.group(1))
+            
+            del_match = re.search(r"(\d+) deletions?\(-\)", output)
+            if del_match:
+                stats["deletions"] = int(del_match.group(1))
+        
+        # Get commit count
+        result = self._run_git(["rev-list", "--count", f"{self.base_branch}..{branch_name}"])
+        if result.returncode == 0:
+            try:
+                stats["commits"] = int(result.stdout.strip())
+            except ValueError:
+                pass
+        
+        return stats
+    
+    def merge_with_message(
+        self, 
+        branch_name: str, 
+        commit_message: str,
+        delete_after: bool = False
+    ) -> bool:
+        """
+        Merge a branch into main with a custom commit message.
+        
+        Args:
+            branch_name: The branch to merge
+            commit_message: Custom commit message
+            delete_after: Whether to delete the branch after merge
+            
+        Returns:
+            True if merge succeeded
+        """
+        # Ensure we're on base branch
+        result = self._run_git(["checkout", self.base_branch])
+        if result.returncode != 0:
+            print(f"Error: Could not checkout {self.base_branch}: {result.stderr}")
+            return False
+        
+        # Perform merge
+        result = self._run_git(["merge", "--no-ff", branch_name, "-m", commit_message])
+        
+        if result.returncode != 0:
+            if "conflict" in result.stderr.lower() or "conflict" in result.stdout.lower():
+                print("Merge conflict detected! Aborting...")
+                self._run_git(["merge", "--abort"])
+                return False
+            print(f"Merge failed: {result.stderr}")
+            return False
+        
+        print(f"Successfully merged {branch_name}")
+        
+        if delete_after:
+            # Extract spec name from branch
+            spec_name = branch_name.replace("auto-claude/", "")
+            
+            # Remove worktree if exists
+            worktree_path = self.get_worktree_path(spec_name)
+            if worktree_path.exists():
+                self._run_git(["worktree", "remove", "--force", str(worktree_path)])
+            
+            # Delete branch
+            self._run_git(["branch", "-D", branch_name])
+            print(f"Deleted branch: {branch_name}")
+        
+        return True
+    
+    def push_to_remote(self, branch: str | None = None) -> bool:
+        """
+        Push a branch to remote.
+        
+        Args:
+            branch: Branch to push (default: current branch)
+            
+        Returns:
+            True if push succeeded
+        """
+        if branch is None:
+            result = self._run_git(["rev-parse", "--abbrev-ref", "HEAD"])
+            branch = result.stdout.strip() if result.returncode == 0 else self.base_branch
+        
+        result = self._run_git(["push", "origin", branch])
+        
+        if result.returncode != 0:
+            print(f"Push failed: {result.stderr}")
+            return False
+        
+        print(f"Successfully pushed {branch} to origin")
+        return True
+
 
 # Keep STAGING_WORKTREE_NAME for backward compatibility in imports
 STAGING_WORKTREE_NAME = "auto-claude"
