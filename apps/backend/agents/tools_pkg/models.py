@@ -134,55 +134,64 @@ def is_electron_mcp_enabled() -> bool:
 
 AGENT_CONFIGS = {
     # ═══════════════════════════════════════════════════════════════════════
-    # SPEC CREATION PHASES (Minimal tools, fast startup)
+    # SPEC CREATION PHASES - FULL ACCESS MODE
+    # All agents have the same permissions as the user (like Claude in Cursor)
     # ═══════════════════════════════════════════════════════════════════════
     "spec_gatherer": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
-        "mcp_servers": [],  # No MCP needed - just reads project
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
     "spec_researcher": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
-        "mcp_servers": ["context7"],  # Needs docs lookup
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
     "spec_writer": {
-        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS,
-        "mcp_servers": [],  # Just writes spec.md
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "high",
+        "extended_permissions": True,
     },
     "spec_critic": {
-        "tools": BASE_READ_TOOLS,
-        "mcp_servers": [],  # Self-critique, no external tools
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "ultrathink",
+        "extended_permissions": True,
     },
     "spec_discovery": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
-        "mcp_servers": [],
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
     "spec_context": {
-        "tools": BASE_READ_TOOLS,
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
     "spec_validation": {
-        "tools": BASE_READ_TOOLS,
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "high",
+        "extended_permissions": True,
     },
     "spec_compaction": {
-        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS,
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
     # ═══════════════════════════════════════════════════════════════════════
     # BUILD PHASES (Full tools + Graphiti memory)
@@ -247,83 +256,92 @@ AGENT_CONFIGS = {
         "extended_permissions": True,  # Enable full system access
     },
     # ═══════════════════════════════════════════════════════════════════════
-    # UTILITY PHASES (Minimal, no MCP)
+    # UTILITY PHASES - FULL ACCESS MODE
+    # All agents have the same permissions as the user (like Claude in Cursor)
     # ═══════════════════════════════════════════════════════════════════════
     "insights": {
-        # FULL ACCESS MODE: Insights has same permissions as user (like Claude in Cursor)
-        # Can execute git push, system commands, edit files, etc.
+        # FULL ACCESS MODE: Can execute git push, system commands, edit files, etc.
         "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
-        "mcp_servers": ["context7"],  # For documentation lookup
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "medium",
-        "extended_permissions": True,  # Enable full system access
+        "extended_permissions": True,
     },
     "merge_resolver": {
-        "tools": [],  # Text-only analysis
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "low",
+        "extended_permissions": True,
     },
     "merge_reviewer": {
-        # Full review capabilities for Smart Push: conflict detection, quality check, tests
         "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
-        "mcp_servers": ["context7"],  # For documentation lookup during review
-        "auto_claude_tools": [],
-        "thinking_default": "medium",  # Medium thinking for review decisions
-    },
-    "commit_message": {
-        "tools": [],
-        "mcp_servers": [],
-        "auto_claude_tools": [],
-        "thinking_default": "low",
-    },
-    "pr_reviewer": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,  # Read-only
-        "mcp_servers": ["context7"],
-        "auto_claude_tools": [],
-        "thinking_default": "high",
-    },
-    # ═══════════════════════════════════════════════════════════════════════
-    # ANALYSIS PHASES
-    # ═══════════════════════════════════════════════════════════════════════
-    "analysis": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
         "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,
     },
-    "batch_analysis": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
+    "commit_message": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
         "thinking_default": "low",
+        "extended_permissions": True,
     },
-    "batch_validation": {
-        "tools": BASE_READ_TOOLS,
-        "mcp_servers": [],
-        "auto_claude_tools": [],
-        "thinking_default": "low",
-    },
-    # ═══════════════════════════════════════════════════════════════════════
-    # ROADMAP & IDEATION
-    # ═══════════════════════════════════════════════════════════════════════
-    "roadmap_discovery": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
+    "pr_reviewer": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": ["context7"],
         "auto_claude_tools": [],
         "thinking_default": "high",
+        "extended_permissions": True,
     },
-    "competitor_analysis": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
-        "mcp_servers": ["context7"],  # WebSearch for competitor research
+    # ═══════════════════════════════════════════════════════════════════════
+    # ANALYSIS PHASES - FULL ACCESS MODE
+    # ═══════════════════════════════════════════════════════════════════════
+    "analysis": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
         "auto_claude_tools": [],
-        "thinking_default": "high",
+        "thinking_default": "medium",
+        "extended_permissions": True,
     },
-    "ideation": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
+    "batch_analysis": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": [],
         "auto_claude_tools": [],
+        "thinking_default": "low",
+        "extended_permissions": True,
+    },
+    "batch_validation": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": [],
+        "auto_claude_tools": [],
+        "thinking_default": "low",
+        "extended_permissions": True,
+    },
+    # ═══════════════════════════════════════════════════════════════════════
+    # ROADMAP & IDEATION - FULL ACCESS MODE
+    # ═══════════════════════════════════════════════════════════════════════
+    "roadmap_discovery": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
+        "auto_claude_tools": [],
         "thinking_default": "high",
+        "extended_permissions": True,
+    },
+    "competitor_analysis": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
+        "auto_claude_tools": [],
+        "thinking_default": "high",
+        "extended_permissions": True,
+    },
+    "ideation": {
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],
+        "auto_claude_tools": [],
+        "thinking_default": "high",
+        "extended_permissions": True,
     },
 }
 
