@@ -1,0 +1,156 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║   💾 AUTO-SAVE ZU GITHUB - QUICK START                       ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🎯 WAS IST AUTO-SAVE?                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Automatisches Backup-System, das ALLE deine Änderungen an
+  Auto-Claude automatisch zu deinem GitHub Fork speichert.
+  
+  ✅ Alle 5 Minuten geprüft
+  ✅ Automatisch committed & gepushed
+  ✅ Läuft im Hintergrund
+  ✅ Nie wieder Arbeit verlieren!
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🚀 SO STARTEST DU (Wähle eine Methode)                      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Methode 1: Desktop-Icon (Einfachste!) 🖱️
+  ─────────────────────────────────────────
+  → Doppelklick: "Auto-Save Starten"
+     (Grünes Icon auf Desktop)
+  
+  Methode 2: Batch-Datei 📂
+  ─────────────────────────
+  → Doppelklick im Projekt:
+     Auto-Save-Zu-GitHub.bat
+  
+  Methode 3: PowerShell 💻
+  ─────────────────────────
+  cd c:\Projekte\auto-claude
+  .\Auto-Save-Zu-GitHub.ps1
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📊 STATUS PRÜFEN                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Desktop: Doppelklick "Auto-Save Status" (Blaues Icon)
+  
+  Oder:    .\Auto-Save-Status.bat
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🛑 STOPPEN                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Desktop: Doppelklick "Auto-Save Stoppen" (Rotes Icon)
+  
+  Oder:    .\Auto-Save-Stoppen.bat
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  💡 WAS PASSIERT AUTOMATISCH?                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Alle 5 Minuten:
+  ───────────────
+  1. ✓ Prüft auf Änderungen in deinem Code
+  2. ✓ Committed sie automatisch
+  3. ✓ Pushed zu deinem Fork
+  
+  Du siehst dann:
+  ───────────────
+  [14:35:22] Änderungen gefunden - speichere zu GitHub...
+     Geänderte Dateien:
+       M apps/backend/some_file.py
+       M apps/frontend/src/component.tsx
+     Pushing zu GitHub...
+  ✅ Erfolgreich zu GitHub gespeichert!
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ✅ WAS WIRD GESPEICHERT?                                    ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  ✅ App-Code (apps/backend/, apps/frontend/)
+  ✅ Konfigurationsdateien
+  ✅ Skripte und Tools
+  ✅ Dokumentation (*.md)
+  ✅ Alle deine Anpassungen
+  
+  ❌ NICHT gespeichert:
+  ❌ .auto-claude/specs/ (Projekt-Builds)
+  ❌ node_modules, venv
+  ❌ Build-Outputs (dist/, out/)
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🔧 DESKTOP-ICONS ÜBERSICHT                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Auf deinem Desktop:
+  
+  🟢 Auto-Save Starten   → Aktiviert Auto-Backup
+  🔵 Auto-Save Status    → Zeigt Status an
+  🔴 Auto-Save Stoppen   → Deaktiviert Auto-Backup
+  
+  🔵 Update Auto Claude  → Holt Updates vom Original-Entwickler
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📖 TYPISCHER WORKFLOW                                       ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Morgens:
+  ────────
+  1. Doppelklick "Auto-Save Starten"
+  2. Arbeite normal in VS Code/Cursor
+  
+  Während du arbeitest:
+  ─────────────────────
+  → System speichert alle 5 Minuten automatisch
+  → Du musst NICHTS tun!
+  
+  Abends:
+  ───────
+  → Optional: "Auto-Save Stoppen"
+  → Oder lass es einfach laufen
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🔗 DEIN FORK AUF GITHUB                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  https://github.com/badalyan-max/Auto-Claude
+  
+  → Hier landen alle deine Auto-Saves!
+  → Komplett unabhängig vom Original
+  → Du hast volle Kontrolle
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  📚 DOKUMENTATION                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  AUTO-SAVE-ANLEITUNG.md  → Vollständige Anleitung
+  UPDATE-ANLEITUNG.md     → Updates vom Original holen
+  UPDATE-CHEAT-SHEET.txt  → Git Quick Reference
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  🆘 HILFE                                                     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  Problem mit Auto-Save?
+  → Lies AUTO-SAVE-ANLEITUNG.md
+  → Oder frag die KI: "Auto-Save funktioniert nicht"
+  
+  Allgemeine Probleme?
+  → PROBLEMLÖSUNGEN.md
+  → HILFE-DEUTSCH.md
+
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║  🎉 READY TO GO!                                             ║
+║                                                               ║
+║  Einfach "Auto-Save Starten" doppelklicken und fertig!      ║
+║  Deine Arbeit wird automatisch gesichert! 💾                 ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
