@@ -1,27 +1,11 @@
-<#
-.SYNOPSIS
-    Smart Push - Intelligentes Push-und-Merge-Tool für Auto Claude Projekte
-.DESCRIPTION
-    Dieses Skript ermöglicht One-Click Push und Merge für alle Auto Claude Projekte.
-    Es findet fertige Specs, führt KI-Reviews durch und merged sie interaktiv in main.
-.PARAMETER Project
-    Pfad zum Projekt (default: aktuelles Verzeichnis)
-.PARAMETER Spec
-    Nur eine bestimmte Spec verarbeiten
-.PARAMETER NoReview
-    KI-Review überspringen
-.PARAMETER DryRun
-    Testlauf ohne echte Änderungen
-.PARAMETER Push
-    Nach Merge automatisch pushen
-.PARAMETER Auto
-    Vollautomatisch ohne Rückfragen
-.EXAMPLE
-    .\Smart-Push.ps1
-    .\Smart-Push.ps1 -Project "C:\Projekte\craft-connect"
-    .\Smart-Push.ps1 -Spec 001 -Push
-    .\Smart-Push.ps1 -NoReview -DryRun
-#>
+# Smart-Push.ps1
+# Smart Push - Intelligent push and merge tool for Auto Claude projects
+#
+# Usage:
+#   .\Smart-Push.ps1
+#   .\Smart-Push.ps1 -Project "C:\Projects\my-project"
+#   .\Smart-Push.ps1 -Spec 001 -Push
+#   .\Smart-Push.ps1 -NoReview -DryRun
 
 param(
     [string]$Project = "",
@@ -34,13 +18,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Pfade
+# Paths
 $ScriptDir = $PSScriptRoot
-$AutoClaudeDir = $ScriptDir  # Dieses Skript liegt im Auto Claude Root
+$AutoClaudeDir = $ScriptDir
 $BackendDir = Join-Path $AutoClaudeDir "apps\backend"
 $PythonScript = Join-Path $BackendDir "smart_push.py"
 
-# Farben
+# Colors
 function Write-ColorOutput {
     param([string]$Message, [string]$Color = "White")
     Write-Host $Message -ForegroundColor $Color
@@ -49,52 +33,52 @@ function Write-ColorOutput {
 function Write-Header {
     param([string]$Text)
     Write-Host ""
-    Write-ColorOutput "════════════════════════════════════════════════════════════════════════" "Cyan"
+    Write-ColorOutput "========================================================================" "Cyan"
     Write-ColorOutput "  $Text" "Cyan"
-    Write-ColorOutput "════════════════════════════════════════════════════════════════════════" "Cyan"
+    Write-ColorOutput "========================================================================" "Cyan"
     Write-Host ""
 }
 
-function Write-Success { param($Message) Write-Host "✅ $Message" -ForegroundColor Green }
-function Write-Info { param($Message) Write-Host "ℹ️  $Message" -ForegroundColor Cyan }
-function Write-Warning { param($Message) Write-Host "⚠️  $Message" -ForegroundColor Yellow }
-function Write-Error { param($Message) Write-Host "❌ $Message" -ForegroundColor Red }
+function Write-Success { param($Message) Write-Host "[OK] $Message" -ForegroundColor Green }
+function Write-Info { param($Message) Write-Host "[INFO] $Message" -ForegroundColor Cyan }
+function Write-Warn { param($Message) Write-Host "[WARN] $Message" -ForegroundColor Yellow }
+function Write-Err { param($Message) Write-Host "[ERROR] $Message" -ForegroundColor Red }
 
 # ============================================================================
-# HAUPTPROGRAMM
+# MAIN
 # ============================================================================
 
 Write-Header "SMART PUSH - Launcher"
 
-# Prüfe Python
+# Check Python
 try {
     $pythonVersion = python --version 2>&1
-    Write-Success "Python gefunden: $pythonVersion"
+    Write-Success "Python found: $pythonVersion"
 } catch {
-    Write-Error "Python nicht gefunden! Bitte Python installieren."
+    Write-Err "Python not found! Please install Python."
     exit 1
 }
 
-# Prüfe ob Skript existiert
+# Check if script exists
 if (-not (Test-Path $PythonScript)) {
-    Write-Error "smart_push.py nicht gefunden: $PythonScript"
+    Write-Err "smart_push.py not found: $PythonScript"
     exit 1
 }
 
-Write-Success "Smart Push Script gefunden"
+Write-Success "Smart Push script found"
 
-# Bestimme Projekt-Verzeichnis
+# Determine project directory
 if ($Project) {
     $ProjectDir = $Project
 } else {
-    # Wenn wir in Auto Claude selbst sind, frage nach dem Projekt
+    # If we are in Auto Claude itself, ask for the project
     $CurrentDir = Get-Location
     
     if ($CurrentDir -like "*auto-claude*") {
-        Write-Info "Du bist im Auto Claude Verzeichnis."
+        Write-Info "You are in the Auto Claude directory."
         Write-Host ""
-        Write-Host "Bitte gib den Pfad zum Projekt ein (oder Enter für aktuelles):" -ForegroundColor Yellow
-        $inputProject = Read-Host "Projekt-Pfad"
+        Write-Host "Please enter the project path (or Enter for current):" -ForegroundColor Yellow
+        $inputProject = Read-Host "Project path"
         
         if ($inputProject) {
             $ProjectDir = $inputProject
@@ -106,50 +90,50 @@ if ($Project) {
     }
 }
 
-Write-Info "Projekt: $ProjectDir"
+Write-Info "Project: $ProjectDir"
 
-# Baue Argumente
-$args = @()
+# Build arguments
+$arguments = @()
 
 if ($ProjectDir) {
-    $args += "--project"
-    $args += "`"$ProjectDir`""
+    $arguments += "--project"
+    $arguments += "`"$ProjectDir`""
 }
 
 if ($Spec) {
-    $args += "--spec"
-    $args += $Spec
+    $arguments += "--spec"
+    $arguments += $Spec
 }
 
 if ($NoReview) {
-    $args += "--no-review"
+    $arguments += "--no-review"
 }
 
 if ($DryRun) {
-    $args += "--dry-run"
+    $arguments += "--dry-run"
 }
 
 if ($Push) {
-    $args += "--push"
+    $arguments += "--push"
 }
 
 if ($Auto) {
-    $args += "--auto"
+    $arguments += "--auto"
 }
 
-# Wechsle ins Backend-Verzeichnis (für imports)
+# Change to backend directory (for imports)
 Push-Location $BackendDir
 
 try {
     Write-Host ""
-    Write-ColorOutput "Starte Smart Push..." "Cyan"
+    Write-ColorOutput "Starting Smart Push..." "Cyan"
     Write-Host ""
     
-    # Führe Python-Skript aus
-    $cmd = "python `"$PythonScript`" $($args -join ' ')"
+    # Execute Python script
+    $cmd = "python `"$PythonScript`" $($arguments -join ' ')"
     
-    if ($args.Count -gt 0) {
-        Write-Info "Befehl: python smart_push.py $($args -join ' ')"
+    if ($arguments.Count -gt 0) {
+        Write-Info "Command: python smart_push.py $($arguments -join ' ')"
     }
     
     Write-Host ""
@@ -165,14 +149,14 @@ try {
 Write-Host ""
 
 if ($exitCode -eq 0) {
-    Write-Success "Smart Push abgeschlossen!"
+    Write-Success "Smart Push completed!"
 } else {
-    Write-Warning "Smart Push beendet mit Code: $exitCode"
+    Write-Warn "Smart Push finished with code: $exitCode"
 }
 
-# Warte auf Enter wenn nicht im Terminal
+# Wait for Enter if in console
 if ($Host.Name -eq "ConsoleHost") {
     Write-Host ""
-    Write-Host "Drücke Enter zum Beenden..." -ForegroundColor Gray
+    Write-Host "Press Enter to close..." -ForegroundColor Gray
     Read-Host
 }
