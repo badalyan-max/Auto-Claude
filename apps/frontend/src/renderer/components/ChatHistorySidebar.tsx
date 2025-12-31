@@ -297,6 +297,19 @@ function SessionItem({
             <Pencil className="mr-2 h-3.5 w-3.5" />
             Rename
           </DropdownMenuItem>
+          {onOpenAsTab && (
+            <DropdownMenuItem onSelect={onOpenAsTab}>
+              <ExternalLink className="mr-2 h-3.5 w-3.5" />
+              Open in Tab
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            onSelect={onDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-3.5 w-3.5" />
+            Delete
+          </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={onDelete}
             className="text-destructive focus:text-destructive"
