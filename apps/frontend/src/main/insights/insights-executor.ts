@@ -26,10 +26,17 @@ interface ProcessorResult {
 /**
  * Python process executor for insights
  * Handles spawning and managing the Python insights runner process
+ * 
+ * MULTI-SESSION MODE (since 31.12.2025):
+ * Supports unlimited parallel sessions per project.
+ * Sessions are tracked by sessionId, not projectId.
  */
 export class InsightsExecutor extends EventEmitter {
   private config: InsightsConfig;
+  // Map of sessionId -> ChildProcess (allows multiple sessions per project)
   private activeSessions: Map<string, ChildProcess> = new Map();
+  // Track which sessions belong to which project
+  private sessionsByProject: Map<string, Set<string>> = new Map();
 
   constructor(config: InsightsConfig) {
     super();
@@ -37,22 +44,69 @@ export class InsightsExecutor extends EventEmitter {
   }
 
   /**
-   * Check if a session is currently active
+   * Check if a specific session is currently active
    */
-  isSessionActive(projectId: string): boolean {
-    return this.activeSessions.has(projectId);
+  isSessionActive(sessionId: string): boolean {
+    return this.activeSessions.has(sessionId);
   }
 
   /**
-   * Cancel an active session
+   * Get all active sessions for a project
    */
-  cancelSession(projectId: string): boolean {
-    const existingProcess = this.activeSessions.get(projectId);
+  getActiveSessionsForProject(projectId: string): string[] {
+    return Array.from(this.sessionsByProject.get(projectId) || []);
+  }
+
+  /**
+   * Get count of all active sessions
+   */
+  getActiveSessionCount(): number {
+    return this.activeSessions.size;
+  }
+
+  /**
+   * Cancel a specific session by sessionId
+   */
+  cancelSession(sessionId: string): boolean {
+    const existingProcess = this.activeSessions.get(sessionId);
     if (!existingProcess) return false;
 
     existingProcess.kill();
-    this.activeSessions.delete(projectId);
+    this.activeSessions.delete(sessionId);
+    
+    // Remove from project tracking
+    for (const [projectId, sessions] of this.sessionsByProject.entries()) {
+      if (sessions.has(sessionId)) {
+        sessions.delete(sessionId);
+        if (sessions.size === 0) {
+          this.sessionsByProject.delete(projectId);
+        }
+        break;
+      }
+    }
+    
     return true;
+  }
+
+  /**
+   * Cancel all sessions for a project
+   */
+  cancelAllSessionsForProject(projectId: string): number {
+    const sessions = this.sessionsByProject.get(projectId);
+    if (!sessions) return 0;
+    
+    let cancelled = 0;
+    for (const sessionId of sessions) {
+      const proc = this.activeSessions.get(sessionId);
+      if (proc) {
+        proc.kill();
+        this.activeSessions.delete(sessionId);
+        cancelled++;
+      }
+    }
+    
+    this.sessionsByProject.delete(projectId);
+    return cancelled;
   }
 
   /**

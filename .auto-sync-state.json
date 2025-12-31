@@ -1,8 +1,7 @@
 {
-  "last_sync": "2025-12-31T22:25:01.364265",
-  "total_syncs": 15,
+  "last_sync": "2025-12-31T22:27:02.128155",
+  "total_syncs": 23,
   "last_files": [
-    "apps/backend/agents/tools_pkg/models.py",
-    "apps/backend/runners/insights_runner.py"
+    "apps/backend/agents/tools_pkg/models.py"
   ]
 }
