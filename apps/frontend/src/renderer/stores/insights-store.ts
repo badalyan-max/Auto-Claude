@@ -16,6 +16,12 @@ interface ToolUsage {
   input?: string;
 }
 
+// Tab represents an open session in the tab bar
+export interface InsightsTab {
+  sessionId: string;
+  title: string;
+}
+
 interface InsightsState {
   // Data
   session: InsightsSession | null;
@@ -26,6 +32,9 @@ interface InsightsState {
   currentTool: ToolUsage | null; // Currently executing tool
   toolsUsed: InsightsToolUsage[]; // Tools used during current response
   isLoadingSessions: boolean;
+  // Tab management
+  openTabs: InsightsTab[]; // Currently open tabs
+  activeTabId: string | null; // Currently active tab's session ID
 
   // Actions
   setSession: (session: InsightsSession | null) => void;
@@ -42,6 +51,11 @@ interface InsightsState {
   finalizeStreamingMessage: (suggestedTask?: InsightsChatMessage['suggestedTask']) => void;
   clearSession: () => void;
   setLoadingSessions: (loading: boolean) => void;
+  // Tab actions
+  openTab: (sessionId: string, title: string) => void;
+  closeTab: (sessionId: string) => void;
+  setActiveTab: (sessionId: string | null) => void;
+  updateTabTitle: (sessionId: string, newTitle: string) => void;
 }
 
 const initialStatus: InsightsChatStatus = {
@@ -59,6 +73,9 @@ export const useInsightsStore = create<InsightsState>((set, _get) => ({
   currentTool: null,
   toolsUsed: [],
   isLoadingSessions: false,
+  // Tab management initial state
+  openTabs: [],
+  activeTabId: null,
 
   // Actions
   setSession: (session) => set({ session }),
@@ -190,7 +207,45 @@ export const useInsightsStore = create<InsightsState>((set, _get) => ({
       streamingContent: '',
       currentTool: null,
       toolsUsed: []
-    })
+    }),
+
+  // Tab actions
+  openTab: (sessionId, title) =>
+    set((state) => {
+      const existingTab = state.openTabs.find(tab => tab.sessionId === sessionId);
+      if (existingTab) {
+        return { activeTabId: sessionId };
+      }
+      return {
+        openTabs: [...state.openTabs, { sessionId, title }],
+        activeTabId: sessionId
+      };
+    }),
+
+  closeTab: (sessionId) =>
+    set((state) => {
+      const newTabs = state.openTabs.filter(tab => tab.sessionId !== sessionId);
+      let newActiveTabId = state.activeTabId;
+      if (state.activeTabId === sessionId) {
+        const closingIndex = state.openTabs.findIndex(tab => tab.sessionId === sessionId);
+        if (newTabs.length > 0) {
+          const newIndex = Math.max(0, closingIndex - 1);
+          newActiveTabId = newTabs[newIndex]?.sessionId || null;
+        } else {
+          newActiveTabId = null;
+        }
+      }
+      return { openTabs: newTabs, activeTabId: newActiveTabId };
+    }),
+
+  setActiveTab: (sessionId) => set({ activeTabId: sessionId }),
+
+  updateTabTitle: (sessionId, newTitle) =>
+    set((state) => ({
+      openTabs: state.openTabs.map(tab =>
+        tab.sessionId === sessionId ? { ...tab, title: newTitle } : tab
+      )
+    }))
 }));
 
 // Helper functions
@@ -282,8 +337,11 @@ export async function switchSession(projectId: string, sessionId: string): Promi
 }
 
 export async function deleteSession(projectId: string, sessionId: string): Promise<boolean> {
+  const store = useInsightsStore.getState();
   const result = await window.electronAPI.deleteInsightsSession(projectId, sessionId);
   if (result.success) {
+    // Close the tab if it was open
+    store.closeTab(sessionId);
     // Reload sessions list and current session
     await loadInsightsSession(projectId);
     return true;
@@ -294,6 +352,8 @@ export async function deleteSession(projectId: string, sessionId: string): Promi
 export async function renameSession(projectId: string, sessionId: string, newTitle: string): Promise<boolean> {
   const result = await window.electronAPI.renameInsightsSession(projectId, sessionId, newTitle);
   if (result.success) {
+    // Update the tab title if the session is open as a tab
+    useInsightsStore.getState().updateTabTitle(sessionId, newTitle);
     // Reload sessions list to reflect the change
     await loadInsightsSessions(projectId);
     return true;
