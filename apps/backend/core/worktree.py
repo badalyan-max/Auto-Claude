@@ -604,6 +604,99 @@ class WorktreeManager:
 
         self._run_git(["worktree", "prune"])
 
+    def cleanup_merged_tasks(self, dry_run: bool = False) -> dict:
+        """
+        OPTION B: Cleanup tasks that are safely merged into base branch.
+        
+        This is SAFE because:
+        - Only removes branches that are fully merged
+        - Never deletes unmerged work
+        - Preserves spec directories for history
+        
+        Args:
+            dry_run: If True, only report what would be cleaned, don't actually delete
+            
+        Returns:
+            dict with cleanup statistics:
+            {
+                "cleaned": [list of spec names cleaned],
+                "kept_unmerged": [list of spec names with unmerged work],
+                "errors": [list of error messages]
+            }
+        """
+        result = {
+            "cleaned": [],
+            "kept_unmerged": [],
+            "errors": []
+        }
+        
+        # Get all auto-claude branches
+        all_branches = self.list_all_spec_branches()
+        
+        if not all_branches:
+            print("ℹ️  No auto-claude branches found")
+            return result
+        
+        print(f"\n🔍 Checking {len(all_branches)} auto-claude branch(es)...")
+        
+        for branch_name in all_branches:
+            # Extract spec name from branch (auto-claude/XXX-name → XXX-name)
+            spec_name = branch_name.replace("auto-claude/", "")
+            
+            # Check if merged
+            if self._is_branch_merged(branch_name):
+                # SAFE TO DELETE - branch is fully merged
+                if dry_run:
+                    print(f"  [DRY RUN] Would clean: {spec_name} ✓ (merged)")
+                    result["cleaned"].append(spec_name)
+                else:
+                    print(f"  🧹 Cleaning merged task: {spec_name}")
+                    
+                    try:
+                        # Remove worktree if it exists
+                        worktree_path = self.get_worktree_path(spec_name)
+                        if worktree_path.exists():
+                            remove_result = self._run_git(
+                                ["worktree", "remove", "--force", str(worktree_path)]
+                            )
+                            if remove_result.returncode != 0:
+                                # Force remove with shutil if git fails
+                                shutil.rmtree(worktree_path, ignore_errors=True)
+                        
+                        # Delete the branch
+                        delete_result = self._run_git(["branch", "-D", branch_name])
+                        if delete_result.returncode == 0:
+                            result["cleaned"].append(spec_name)
+                            print(f"    ✓ Removed branch and worktree")
+                        else:
+                            result["errors"].append(f"{spec_name}: {delete_result.stderr}")
+                            print(f"    ✗ Failed to delete branch: {delete_result.stderr}")
+                    
+                    except Exception as e:
+                        result["errors"].append(f"{spec_name}: {str(e)}")
+                        print(f"    ✗ Error during cleanup: {e}")
+            else:
+                # NOT MERGED - keep it!
+                print(f"  ⚠️  Keeping unmerged task: {spec_name} (has unmerged work)")
+                result["kept_unmerged"].append(spec_name)
+        
+        # Prune stale worktree references
+        if not dry_run:
+            self._run_git(["worktree", "prune"])
+        
+        # Print summary
+        print(f"\n📊 Cleanup Summary:")
+        print(f"  ✅ Cleaned (merged): {len(result['cleaned'])}")
+        print(f"  ⚠️  Kept (unmerged): {len(result['kept_unmerged'])}")
+        print(f"  ❌ Errors: {len(result['errors'])}")
+        
+        if result["errors"]:
+            print("\n⚠️  Errors encountered:")
+            for error in result["errors"]:
+                print(f"    - {error}")
+        
+        return result
+
     def get_test_commands(self, spec_name: str) -> list[str]:
         """Detect likely test/run commands for the project."""
         worktree_path = self.get_worktree_path(spec_name)
