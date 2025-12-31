@@ -310,13 +310,6 @@ function SessionItem({
             <Trash2 className="mr-2 h-3.5 w-3.5" />
             Delete
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={onDelete}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 h-3.5 w-3.5" />
-            Delete
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
