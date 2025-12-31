@@ -136,10 +136,17 @@ async function executeQuery(
     // This ensures .env variables are available even if dotenv fails to load
     const env: Record<string, string | undefined> = { ...process.env };
     
+    // Get the backend directory for cwd
+    const backendDir = path.dirname(scriptPath);
+    
+    console.log(`[Memory] Executing: ${pythonExe} ${fullArgs.join(' ')}`);
+    console.log(`[Memory] Working directory: ${backendDir}`);
+    
     const proc = spawn(pythonExe, fullArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout,
       env,
+      cwd: backendDir,
     });
 
     let stdout = '';
@@ -151,17 +158,21 @@ async function executeQuery(
 
     proc.stderr.on('data', (data) => {
       stderr += data.toString();
+      console.error(`[Memory] stderr: ${data.toString().trim()}`);
     });
 
     proc.on('close', (code) => {
+      console.log(`[Memory] Process exited with code ${code}`);
       if (code === 0 && stdout) {
         try {
           const result = JSON.parse(stdout);
           resolve(result);
         } catch {
+          console.error(`[Memory] Invalid JSON: ${stdout.substring(0, 500)}`);
           resolve({ success: false, error: `Invalid JSON response: ${stdout}` });
         }
       } else {
+        console.error(`[Memory] Failed: ${stderr || `exit code ${code}`}`);
         resolve({
           success: false,
           error: stderr || `Process exited with code ${code}`,
@@ -170,6 +181,7 @@ async function executeQuery(
     });
 
     proc.on('error', (err) => {
+      console.error(`[Memory] Process error: ${err.message}`);
       resolve({ success: false, error: err.message });
     });
 
@@ -309,6 +321,10 @@ async function executeSemanticQuery(
  */
 export class MemoryService {
   private config: MemoryServiceConfig;
+  
+  // Prevent parallel queries that can cause database lock issues
+  private pendingEpisodicQuery: Promise<MemoryEpisode[]> | null = null;
+  private pendingEntityQuery: Promise<MemoryEpisode[]> | null = null;
 
   constructor(config: MemoryServiceConfig) {
     this.config = config;
@@ -351,8 +367,24 @@ export class MemoryService {
 
   /**
    * Query episodic memories from the database
+   * Uses deduplication to prevent parallel queries causing database locks
    */
   async getEpisodicMemories(limit: number = 20): Promise<MemoryEpisode[]> {
+    // If a query is already in progress, wait for it instead of starting a new one
+    if (this.pendingEpisodicQuery) {
+      console.log('[Memory] Reusing pending episodic query');
+      return this.pendingEpisodicQuery;
+    }
+    
+    this.pendingEpisodicQuery = this._executeEpisodicQuery(limit);
+    try {
+      return await this.pendingEpisodicQuery;
+    } finally {
+      this.pendingEpisodicQuery = null;
+    }
+  }
+  
+  private async _executeEpisodicQuery(limit: number): Promise<MemoryEpisode[]> {
     const result = await executeQuery('get-memories', [
       this.config.dbPath,
       this.config.database,
@@ -377,8 +409,24 @@ export class MemoryService {
 
   /**
    * Query entity memories (patterns, gotchas, etc.) from the database
+   * Uses deduplication to prevent parallel queries causing database locks
    */
   async getEntityMemories(limit: number = 20): Promise<MemoryEpisode[]> {
+    // If a query is already in progress, wait for it instead of starting a new one
+    if (this.pendingEntityQuery) {
+      console.log('[Memory] Reusing pending entity query');
+      return this.pendingEntityQuery;
+    }
+    
+    this.pendingEntityQuery = this._executeEntityQuery(limit);
+    try {
+      return await this.pendingEntityQuery;
+    } finally {
+      this.pendingEntityQuery = null;
+    }
+  }
+  
+  private async _executeEntityQuery(limit: number): Promise<MemoryEpisode[]> {
     const result = await executeQuery('get-entities', [
       this.config.dbPath,
       this.config.database,
