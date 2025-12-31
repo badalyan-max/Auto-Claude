@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T22:27:02.128155",
-  "total_syncs": 23,
+  "last_sync": "2025-12-31T22:38:04.047701",
+  "total_syncs": 16,
   "last_files": [
-    "apps/backend/agents/tools_pkg/models.py"
+    "apps/frontend/src/main/insights/insights-executor.ts"
   ]
 }

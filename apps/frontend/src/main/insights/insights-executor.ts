@@ -111,16 +111,30 @@ export class InsightsExecutor extends EventEmitter {
 
   /**
    * Execute insights query
+   * 
+   * @param projectId - Project identifier
+   * @param projectPath - Path to project
+   * @param message - User message
+   * @param conversationHistory - Previous messages
+   * @param modelConfig - Optional model configuration
+   * @param sessionId - Optional session ID (for parallel sessions). If not provided, uses projectId.
    */
   async execute(
     projectId: string,
     projectPath: string,
     message: string,
     conversationHistory: Array<{ role: string; content: string }>,
-    modelConfig?: InsightsModelConfig
+    modelConfig?: InsightsModelConfig,
+    sessionId?: string
   ): Promise<ProcessorResult> {
-    // Cancel any existing session
-    this.cancelSession(projectId);
+    // Use sessionId if provided, otherwise fall back to projectId for backwards compatibility
+    const effectiveSessionId = sessionId || projectId;
+    
+    // Only cancel if this specific session is already running
+    // (allows multiple parallel sessions)
+    if (this.activeSessions.has(effectiveSessionId)) {
+      this.cancelSession(effectiveSessionId);
+    }
 
     const autoBuildSource = this.config.getAutoBuildSourcePath();
     if (!autoBuildSource) {
@@ -177,7 +191,14 @@ export class InsightsExecutor extends EventEmitter {
       env: processEnv
     });
 
-    this.activeSessions.set(projectId, proc);
+    // Track session (allows multiple parallel sessions)
+    this.activeSessions.set(effectiveSessionId, proc);
+    
+    // Track which sessions belong to which project
+    if (!this.sessionsByProject.has(projectId)) {
+      this.sessionsByProject.set(projectId, new Set());
+    }
+    this.sessionsByProject.get(projectId)!.add(effectiveSessionId);
 
     return new Promise((resolve, reject) => {
       let fullResponse = '';
