@@ -131,9 +131,15 @@ async function executeQuery(
 
   return new Promise((resolve) => {
     const fullArgs = [...baseArgs, scriptPath, command, ...args];
+    
+    // Pass environment variables to Python subprocess
+    // This ensures .env variables are available even if dotenv fails to load
+    const env: Record<string, string | undefined> = { ...process.env };
+    
     const proc = spawn(pythonExe, fullArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout,
+      env,
     });
 
     let stdout = '';

@@ -25,6 +25,26 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Load .env file FIRST (before any other imports that might need env vars)
+# This ensures GRAPHITI_ENABLED, OPENAI_API_KEY, etc. are available
+def _load_env():
+    """Load .env file from backend directory."""
+    try:
+        from dotenv import load_dotenv
+        
+        # Find .env file relative to this script
+        backend_dir = Path(__file__).parent
+        env_file = backend_dir / ".env"
+        
+        if env_file.exists():
+            load_dotenv(env_file)
+            return True
+    except ImportError:
+        pass
+    return False
+
+_load_env()
+
 
 # Apply LadybugDB monkeypatch BEFORE any graphiti imports
 def apply_monkeypatch():

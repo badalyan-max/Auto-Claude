@@ -10,6 +10,7 @@ ZWECK: Stellt sicher, dass externe Änderungen (z.B. von Lovable oder
 """
 
 import json
+import platform
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
@@ -32,6 +33,42 @@ class GitChangeDetector:
     
     def __init__(self, project_dir: Path):
         self.project_dir = Path(project_dir).resolve()
+        self._git_cmd = None
+    
+    def _find_git_command(self) -> str:
+        """Findet Git-Command (Windows-kompatibel)."""
+        if self._git_cmd:
+            return self._git_cmd
+        
+        # Versuche git direkt (im PATH)
+        try:
+            result = subprocess.run(
+                ["git", "--version"],
+                capture_output=True,
+                timeout=5,
+                shell=True
+            )
+            if result.returncode == 0:
+                self._git_cmd = "git"
+                return "git"
+        except Exception:
+            pass
+        
+        # Windows: Versuche gängige Git-Installationspfade
+        if platform.system() == "Windows":
+            common_paths = [
+                r"C:\Program Files\Git\cmd\git.exe",
+                r"C:\Program Files (x86)\Git\cmd\git.exe",
+                r"C:\Program Files\Git\bin\git.exe",
+            ]
+            for git_path in common_paths:
+                if Path(git_path).exists():
+                    self._git_cmd = git_path
+                    return git_path
+        
+        # Fallback
+        self._git_cmd = "git"
+        return "git"
     
     def get_changes_since_index(self) -> GitChangeSummary:
         """
@@ -56,20 +93,17 @@ class GitChangeDetector:
         try:
             # Format: ISO 8601 für git --since
             since_date = index_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            git_cmd = self._find_git_command()
             
             # Hole Commits seit Index
+            cmd_str = f'"{git_cmd}" log "--since={since_date}" "--pretty=format:%H|%an|%ad|%s" "--date=iso"'
             result = subprocess.run(
-                [
-                    "git",
-                    "log",
-                    f"--since={since_date}",
-                    "--pretty=format:%H|%an|%ad|%s",
-                    "--date=iso",
-                ],
+                cmd_str,
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
                 timeout=10,
+                shell=True,  # Windows-kompatibel
             )
             
             if result.returncode != 0:
@@ -78,7 +112,7 @@ class GitChangeDetector:
                     commits_since_index=0,
                     changed_files=[],
                     recent_commits=[],
-                    summary="Keine Git-History verfügbar"
+                    summary="Keine Git-History verfuegbar"
                 )
             
             commits = []
@@ -115,24 +149,22 @@ class GitChangeDetector:
                 commits_since_index=0,
                 changed_files=[],
                 recent_commits=[],
-                summary="Git-Änderungserkennung fehlgeschlagen"
+                summary="Git-Aenderungserkennung fehlgeschlagen"
             )
     
     def _get_recent_changes(self, days: int = 7) -> GitChangeSummary:
         """Hole die Änderungen der letzten N Tage."""
         try:
+            git_cmd = self._find_git_command()
+            
+            cmd_str = f'"{git_cmd}" log "--since={days} days ago" "--pretty=format:%H|%an|%ad|%s" "--date=iso"'
             result = subprocess.run(
-                [
-                    "git",
-                    "log",
-                    f"--since={days} days ago",
-                    "--pretty=format:%H|%an|%ad|%s",
-                    "--date=iso",
-                ],
+                cmd_str,
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
                 timeout=10,
+                shell=True,
             )
             
             if result.returncode != 0:
@@ -174,24 +206,22 @@ class GitChangeDetector:
                 commits_since_index=0,
                 changed_files=[],
                 recent_commits=[],
-                summary=f"Keine Git-Änderungen (letzte {days} Tage)"
+                summary=f"Keine Git-Aenderungen (letzte {days} Tage)"
             )
     
     def _get_changed_files_since(self, since: str) -> list[str]:
         """Hole alle geänderten Dateien seit einem bestimmten Zeitpunkt."""
         try:
+            git_cmd = self._find_git_command()
+            
+            cmd_str = f'"{git_cmd}" log "--since={since}" "--name-only" "--pretty=format:"'
             result = subprocess.run(
-                [
-                    "git",
-                    "log",
-                    f"--since={since}",
-                    "--name-only",
-                    "--pretty=format:",
-                ],
+                cmd_str,
                 cwd=self.project_dir,
                 capture_output=True,
                 text=True,
                 timeout=10,
+                shell=True,
             )
             
             if result.returncode != 0:
@@ -222,7 +252,7 @@ class GitChangeDetector:
         ]
         
         for commit in commits[:5]:  # Maximal 5 Commits
-            lines.append(f"  • {commit['hash']}: {commit['message']}")
+            lines.append(f"  - {commit['hash']}: {commit['message']}")
         
         if len(commits) > 5:
             lines.append(f"  ... und {len(commits) - 5} weitere")

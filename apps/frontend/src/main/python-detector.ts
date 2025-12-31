@@ -290,11 +290,17 @@ const ALLOWED_PATH_PATTERNS: RegExp[] = [
   /^.*\/\.?virtualenv\/bin\/python\d*(\.\d+)?$/,
   /^.*\/env\/bin\/python\d*(\.\d+)?$/,
   /^.*\/python-venv\/bin\/python\d*(\.\d+)?$/,
+  // AppData virtual environments (Windows with forward slashes after normalization)
+  /^[A-Za-z]:\/Users\/[^/]+\/AppData\/Roaming\/[^/]+\/python-venv\/Scripts\/python\.exe$/i,
+  /^[A-Za-z]:\/Users\/[^/]+\/AppData\/Local\/[^/]+\/python-venv\/Scripts\/python\.exe$/i,
   // Windows virtual environments
   /^.*\\\.?venv\\Scripts\\python\.exe$/i,
   /^.*\\\.?virtualenv\\Scripts\\python\.exe$/i,
   /^.*\\env\\Scripts\\python\.exe$/i,
   /^.*\\python-venv\\Scripts\\python\.exe$/i,
+  // Windows AppData virtual environments (Electron app)
+  /^[A-Za-z]:\\Users\\[^\\]+\\AppData\\Roaming\\[^\\]+\\python-venv\\Scripts\\python\.exe$/i,
+  /^[A-Za-z]:\\Users\\[^\\]+\\AppData\\Local\\[^\\]+\\python-venv\\Scripts\\python\.exe$/i,
   // Windows system Python
   /^[A-Za-z]:\\Python\d+\\python\.exe$/i,
   /^[A-Za-z]:\\Program Files\\Python\d+\\python\.exe$/i,
