@@ -1,19 +1,13 @@
-<#
-.SYNOPSIS
-    Erstellt Desktop-Verknüpfungen für Smart Push
-.DESCRIPTION
-    Erstellt zwei Shortcuts auf dem Desktop:
-    1. Smart Push - Interaktiver Modus (fragt nach Projekt)
-    2. Smart Push Quick - Für schnelles Pushen ohne Review
-#>
+# Create-SmartPush-Shortcut.ps1
+# Creates desktop shortcuts for Smart Push
 
 $ErrorActionPreference = "Stop"
 
-# Pfade
+# Paths
 $ScriptDir = $PSScriptRoot
 $SmartPushScript = Join-Path $ScriptDir "Smart-Push.ps1"
 
-# Desktop-Pfad finden
+# Find Desktop path
 $DesktopPath = [Environment]::GetFolderPath("Desktop")
 if (-not (Test-Path $DesktopPath)) {
     $DesktopPath = Join-Path $env:USERPROFILE "Desktop"
@@ -43,54 +37,42 @@ function Create-Shortcut {
         $Shortcut.IconLocation = "powershell.exe,$IconIndex"
         $Shortcut.Save()
         
-        Write-Host "✅ Erstellt: $Name" -ForegroundColor Green
+        Write-Host "[OK] Created: $Name" -ForegroundColor Green
         return $true
     } catch {
-        Write-Host "❌ Fehler bei $Name : $_" -ForegroundColor Red
+        Write-Host "[ERROR] Failed: $Name - $_" -ForegroundColor Red
         return $false
     }
 }
 
 Write-Host ""
-Write-Host "════════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "  SMART PUSH - Desktop-Verknüpfungen erstellen" -ForegroundColor Cyan
-Write-Host "════════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "========================================================================" -ForegroundColor Cyan
+Write-Host "  SMART PUSH - Create Desktop Shortcuts" -ForegroundColor Cyan
+Write-Host "========================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-Write-Host "Desktop-Pfad: $DesktopPath" -ForegroundColor Cyan
+Write-Host "Desktop path: $DesktopPath" -ForegroundColor Cyan
 Write-Host ""
 
-# Hauptverknüpfung - Interaktiver Modus
-Create-Shortcut `
-    -Name "Smart Push" `
-    -TargetPath "powershell.exe" `
-    -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`"" `
-    -Description "Smart Push - KI-gestütztes Merge und Push für Auto Claude Projekte"
+# Main shortcut - Interactive mode
+Create-Shortcut -Name "Smart Push" -TargetPath "powershell.exe" -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`"" -Description "Smart Push - AI-powered merge and push for Auto Claude projects"
 
-# Quick Push - Ohne Review
-Create-Shortcut `
-    -Name "Smart Push (Quick)" `
-    -TargetPath "powershell.exe" `
-    -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`" -NoReview -Push" `
-    -Description "Smart Push Quick - Schnelles Merge ohne KI-Review + Push"
+# Quick Push - No review
+Create-Shortcut -Name "Smart Push (Quick)" -TargetPath "powershell.exe" -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`" -NoReview -Push" -Description "Smart Push Quick - Fast merge without AI review + push"
 
-# Dry Run - Testmodus
-Create-Shortcut `
-    -Name "Smart Push (Test)" `
-    -TargetPath "powershell.exe" `
-    -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`" -DryRun" `
-    -Description "Smart Push Test - Zeigt was passieren würde ohne Änderungen"
+# Dry Run - Test mode
+Create-Shortcut -Name "Smart Push (Test)" -TargetPath "powershell.exe" -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$SmartPushScript`" -DryRun" -Description "Smart Push Test - Shows what would happen without changes"
 
 Write-Host ""
-Write-Host "════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host "  Fertig! 3 Verknüpfungen auf dem Desktop erstellt." -ForegroundColor Green
-Write-Host "════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
+Write-Host "========================================================================" -ForegroundColor Green
+Write-Host "  Done! 3 shortcuts created on desktop." -ForegroundColor Green
+Write-Host "========================================================================" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "Verfügbare Shortcuts:" -ForegroundColor Cyan
-Write-Host "  🔹 Smart Push        - Interaktiver Modus mit KI-Review" -ForegroundColor White
-Write-Host "  🔹 Smart Push Quick  - Schnell ohne Review + automatischer Push" -ForegroundColor White
-Write-Host "  🔹 Smart Push Test   - Testlauf ohne echte Änderungen" -ForegroundColor White
+Write-Host "Available Shortcuts:" -ForegroundColor Cyan
+Write-Host "  - Smart Push        : Interactive mode with AI review" -ForegroundColor White
+Write-Host "  - Smart Push Quick  : Fast without review + auto push" -ForegroundColor White
+Write-Host "  - Smart Push Test   : Dry run without real changes" -ForegroundColor White
 Write-Host ""
 
 Write-Host "Press Enter to close..." -ForegroundColor Gray
