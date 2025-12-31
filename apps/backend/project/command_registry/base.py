@@ -87,21 +87,40 @@ BASE_COMMANDS: set[str] = {
     "sh",
     "bash",
     "zsh",
+    "powershell",  # Windows PowerShell
+    "pwsh",  # PowerShell Core
+    "cmd",  # Windows Command Prompt
     # Archives
     "tar",
     "zip",
     "unzip",
     "gzip",
     "gunzip",
-    # Network (read-only)
+    "bzip2",
+    "bunzip2",
+    "xz",
+    "unxz",
+    "7z",
+    # Network
     "curl",
     "wget",
     "ping",
     "host",
     "dig",
-    # Git (always needed)
+    "nslookup",
+    "netstat",
+    "ss",
+    "ip",
+    "ifconfig",
+    "traceroute",
+    "tracert",  # Windows traceroute
+    "telnet",
+    "nc",
+    "netcat",
+    # Git (full access for GitHub operations)
     "git",
-    "gh",
+    "gh",  # GitHub CLI
+    "git-lfs",  # Git Large File Storage
     # Process management (with validation in security.py)
     "ps",
     "pgrep",
@@ -110,9 +129,26 @@ BASE_COMMANDS: set[str] = {
     "kill",
     "pkill",
     "killall",  # Validated for safe targets only
+    "tasklist",  # Windows process list
+    "taskkill",  # Windows task killer
     # File operations (with validation in security.py)
     "rm",
     "chmod",  # Validated for safe operations only
+    "chown",
+    "chgrp",
+    "icacls",  # Windows permissions
+    "attrib",  # Windows file attributes
+    # System info
+    "systemctl",
+    "service",
+    "sc",  # Windows Service Control
+    "net",  # Windows network commands
+    "reg",  # Windows Registry (read-only operations)
+    "wmic",  # Windows Management Instrumentation
+    "Get-Process",  # PowerShell cmdlet
+    "Get-Service",  # PowerShell cmdlet
+    "Get-ChildItem",  # PowerShell cmdlet
+    "Set-Location",  # PowerShell cmdlet
     # Text tools
     "paste",
     "join",
@@ -128,6 +164,7 @@ BASE_COMMANDS: set[str] = {
     "iconv",
     # Misc safe
     "clear",
+    "cls",  # Windows clear
     "reset",
     "man",
     "help",
@@ -146,6 +183,43 @@ BASE_COMMANDS: set[str] = {
     "yes",
     "jq",
     "yq",
+    "xmllint",
+    "md5sum",
+    "sha256sum",
+    "openssl",
+    # Build & compilation
+    "make",
+    "cmake",
+    "ninja",
+    "msbuild",  # Windows build tool
+    # Windows-specific utilities
+    "dir",
+    "copy",
+    "xcopy",
+    "move",
+    "del",
+    "erase",
+    "ren",
+    "rename",
+    "md",
+    "rd",
+    "where",  # Windows which
+    "findstr",  # Windows grep
+    "more",
+    "type",  # Windows cat
+    "robocopy",
+    # Development tools
+    "code",  # VS Code CLI
+    "nano",
+    "vim",
+    "vi",
+    "emacs",
+    "notepad",
+    # Debugging
+    "strace",
+    "ltrace",
+    "gdb",
+    "lldb",
 }
 
 # =============================================================================
