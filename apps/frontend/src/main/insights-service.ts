@@ -111,6 +111,10 @@ export class InsightsService extends EventEmitter {
 
   /**
    * Send a message and get AI response
+   * 
+   * MULTI-SESSION MODE (since 31.12.2025):
+   * Multiple sessions can run in parallel. Each session is tracked by its sessionId.
+   * The sessionId is now passed to the executor to allow parallel execution.
    */
   async sendMessage(
     projectId: string,
@@ -118,9 +122,6 @@ export class InsightsService extends EventEmitter {
     message: string,
     modelConfig?: InsightsModelConfig
   ): Promise<void> {
-    // Cancel any existing session
-    this.executor.cancelSession(projectId);
-
     // Validate auto-claude source
     const autoBuildSource = this.config.getAutoBuildSourcePath();
     if (!autoBuildSource) {
@@ -132,6 +133,14 @@ export class InsightsService extends EventEmitter {
     let session = this.sessionManager.loadSession(projectId, projectPath);
     if (!session) {
       session = this.sessionManager.createNewSession(projectId, projectPath);
+    }
+
+    // Get the session ID for parallel execution support
+    const sessionId = session.id;
+
+    // Cancel only this specific session if it's already running (not others!)
+    if (this.executor.isSessionActive(sessionId)) {
+      this.executor.cancelSession(sessionId);
     }
 
     // Auto-generate title from first user message if still default
@@ -160,13 +169,14 @@ export class InsightsService extends EventEmitter {
     const configToUse = modelConfig || session.modelConfig;
 
     try {
-      // Execute insights query
+      // Execute insights query with sessionId for parallel execution support
       const result = await this.executor.execute(
         projectId,
         projectPath,
         message,
         conversationHistory,
-        configToUse
+        configToUse,
+        sessionId  // Pass sessionId for multi-session support
       );
 
       // Add assistant message to session
@@ -186,6 +196,27 @@ export class InsightsService extends EventEmitter {
       // Error already emitted by executor
       console.error('[InsightsService] Error executing insights:', error);
     }
+  }
+
+  /**
+   * Get the number of currently active sessions
+   */
+  getActiveSessionCount(): number {
+    return this.executor.getActiveSessionCount();
+  }
+
+  /**
+   * Get active sessions for a specific project
+   */
+  getActiveSessionsForProject(projectId: string): string[] {
+    return this.executor.getActiveSessionsForProject(projectId);
+  }
+
+  /**
+   * Cancel all active sessions for a project
+   */
+  cancelAllSessionsForProject(projectId: string): number {
+    return this.executor.cancelAllSessionsForProject(projectId);
   }
 
   /**
