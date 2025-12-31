@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T21:38:37.899111",
-  "total_syncs": 9,
+  "last_sync": "2025-12-31T21:39:39.894143",
+  "total_syncs": 10,
   "last_files": [
-    "apps/backend/agents/merge_reviewer.py"
+    "apps/backend/core/worktree.py"
   ]
 }
