@@ -155,6 +155,7 @@ export function ChatHistorySidebar({
                     onCancelEdit={handleCancelEdit}
                     onEditTitleChange={setEditTitle}
                     onDelete={() => setDeleteSessionId(session.id)}
+                    onOpenAsTab={onOpenAsTab ? () => onOpenAsTab(session.id, session.title) : undefined}
                   />
                 ))}
               </div>
