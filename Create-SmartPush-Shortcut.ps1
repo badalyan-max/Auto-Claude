@@ -93,5 +93,5 @@ Write-Host "  🔹 Smart Push Quick  - Schnell ohne Review + automatischer Push"
 Write-Host "  🔹 Smart Push Test   - Testlauf ohne echte Änderungen" -ForegroundColor White
 Write-Host ""
 
-Write-Host "Drücke Enter zum Beenden..." -ForegroundColor Gray
+Write-Host "Press Enter to close..." -ForegroundColor Gray
 Read-Host

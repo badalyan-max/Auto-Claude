@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T21:41:50.646472",
-  "total_syncs": 10,
+  "last_sync": "2025-12-31T21:42:42.907527",
+  "total_syncs": 12,
   "last_files": [
-    "Create-SmartPush-Shortcut.ps1"
+    "apps/backend/smart_push.py"
   ]
 }
