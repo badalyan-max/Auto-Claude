@@ -181,6 +181,15 @@ def create_client(
     # Create comprehensive security settings
     # Note: Using both relative paths ("./**") and absolute paths to handle
     # cases where Claude uses absolute paths for file operations
+    #
+    # EXTENDED PERMISSIONS MODE:
+    # Agents are configured with full system access similar to Claude in Cursor.
+    # This includes:
+    # - Full bash command access (validated by security.py)
+    # - Git operations including push/pull
+    # - Windows-specific commands (PowerShell, cmd, etc.)
+    # - System administration tools
+    # See project/command_registry/base.py for full command list
     project_path_str = str(project_dir.resolve())
     spec_path_str = str(spec_dir.resolve())
     security_settings = {

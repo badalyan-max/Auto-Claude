@@ -189,6 +189,7 @@ AGENT_CONFIGS = {
     # Note: "linear" is conditional on project setting "update_linear_with_tasks"
     # ═══════════════════════════════════════════════════════════════════════
     "planner": {
+        # EXTENDED: Full tool access like Claude in Cursor
         "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": ["context7", "graphiti", "auto-claude"],
         "mcp_servers_optional": ["linear"],  # Only if project setting enabled
@@ -198,8 +199,10 @@ AGENT_CONFIGS = {
             TOOL_RECORD_DISCOVERY,
         ],
         "thinking_default": "high",
+        "extended_permissions": True,  # Enable full system access
     },
     "coder": {
+        # EXTENDED: Full tool access like Claude in Cursor
         "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": ["context7", "graphiti", "auto-claude"],
         "mcp_servers_optional": ["linear"],
@@ -211,13 +214,14 @@ AGENT_CONFIGS = {
             TOOL_GET_SESSION_CONTEXT,
         ],
         "thinking_default": "none",  # Coding doesn't use extended thinking
+        "extended_permissions": True,  # Enable full system access
     },
     # ═══════════════════════════════════════════════════════════════════════
     # QA PHASES (Read + test + browser + Graphiti memory)
     # ═══════════════════════════════════════════════════════════════════════
     "qa_reviewer": {
-        # Read-only + Bash (for running tests) - reviewer should NOT edit code
-        "tools": BASE_READ_TOOLS + ["Bash"] + WEB_TOOLS,
+        # EXTENDED: Full read + bash access for comprehensive testing
+        "tools": BASE_READ_TOOLS + ["Bash", "Write"] + WEB_TOOLS,  # Added Write for test reports
         "mcp_servers": ["context7", "graphiti", "auto-claude", "browser"],
         "mcp_servers_optional": ["linear"],  # For updating issue status
         "auto_claude_tools": [
@@ -226,8 +230,10 @@ AGENT_CONFIGS = {
             TOOL_GET_SESSION_CONTEXT,
         ],
         "thinking_default": "high",
+        "extended_permissions": True,  # Enable full system access
     },
     "qa_fixer": {
+        # EXTENDED: Full tool access like Claude in Cursor
         "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
         "mcp_servers": ["context7", "graphiti", "auto-claude", "browser"],
         "mcp_servers_optional": ["linear"],
@@ -238,6 +244,7 @@ AGENT_CONFIGS = {
             TOOL_RECORD_GOTCHA,
         ],
         "thinking_default": "medium",
+        "extended_permissions": True,  # Enable full system access
     },
     # ═══════════════════════════════════════════════════════════════════════
     # UTILITY PHASES (Minimal, no MCP)

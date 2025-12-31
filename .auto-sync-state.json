@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T21:45:45.848371",
-  "total_syncs": 14,
+  "last_sync": "2025-12-31T22:02:55.257534",
+  "total_syncs": 12,
   "last_files": [
-    "Smart-Push.ps1"
+    "apps/backend/project/command_registry/base.py"
   ]
 }
