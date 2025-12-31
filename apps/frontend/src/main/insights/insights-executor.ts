@@ -146,8 +146,8 @@ export class InsightsExecutor extends EventEmitter {
       throw new Error('insights_runner.py not found in auto-claude directory');
     }
 
-    // Emit thinking status
-    this.emit('status', projectId, {
+    // Emit thinking status (use effectiveSessionId for multi-session support)
+    this.emit('status', effectiveSessionId, {
       phase: 'thinking',
       message: 'Processing your message...'
     } as InsightsChatStatus);
@@ -211,20 +211,20 @@ export class InsightsExecutor extends EventEmitter {
         // Collect output for rate limit detection (keep last 10KB)
         allInsightsOutput = (allInsightsOutput + text).slice(-10000);
 
-        // Process output lines
+        // Process output lines (use effectiveSessionId for multi-session support)
         const lines = text.split('\n');
         for (const line of lines) {
           if (line.startsWith('__TASK_SUGGESTION__:')) {
-            this.handleTaskSuggestion(projectId, line, (task) => {
+            this.handleTaskSuggestion(effectiveSessionId, line, (task) => {
               suggestedTask = task;
             });
           } else if (line.startsWith('__TOOL_START__:')) {
-            this.handleToolStart(projectId, line, toolsUsed);
+            this.handleToolStart(effectiveSessionId, line, toolsUsed);
           } else if (line.startsWith('__TOOL_END__:')) {
-            this.handleToolEnd(projectId, line);
+            this.handleToolEnd(effectiveSessionId, line);
           } else if (line.trim()) {
             fullResponse += line + '\n';
-            this.emit('stream-chunk', projectId, {
+            this.emit('stream-chunk', effectiveSessionId, {
               type: 'text',
               content: line + '\n'
             } as InsightsStreamChunk);
@@ -240,7 +240,15 @@ export class InsightsExecutor extends EventEmitter {
       });
 
       proc.on('close', (code) => {
-        this.activeSessions.delete(projectId);
+        // Clean up session tracking
+        this.activeSessions.delete(effectiveSessionId);
+        const projectSessions = this.sessionsByProject.get(projectId);
+        if (projectSessions) {
+          projectSessions.delete(effectiveSessionId);
+          if (projectSessions.size === 0) {
+            this.sessionsByProject.delete(projectId);
+          }
+        }
 
         // Cleanup temp file
         if (historyFileCreated && existsSync(historyFile)) {
@@ -253,15 +261,15 @@ export class InsightsExecutor extends EventEmitter {
 
         // Check for rate limit if process failed
         if (code !== 0) {
-          this.handleRateLimit(projectId, allInsightsOutput);
+          this.handleRateLimit(effectiveSessionId, allInsightsOutput);
         }
 
         if (code === 0) {
-          this.emit('stream-chunk', projectId, {
+          this.emit('stream-chunk', effectiveSessionId, {
             type: 'done'
           } as InsightsStreamChunk);
 
-          this.emit('status', projectId, {
+          this.emit('status', effectiveSessionId, {
             phase: 'complete'
           } as InsightsChatStatus);
 
@@ -272,18 +280,26 @@ export class InsightsExecutor extends EventEmitter {
           });
         } else {
           const error = `Process exited with code ${code}`;
-          this.emit('stream-chunk', projectId, {
+          this.emit('stream-chunk', effectiveSessionId, {
             type: 'error',
             error
           } as InsightsStreamChunk);
 
-          this.emit('error', projectId, error);
+          this.emit('error', effectiveSessionId, error);
           reject(new Error(error));
         }
       });
 
       proc.on('error', (err) => {
-        this.activeSessions.delete(projectId);
+        // Clean up session tracking
+        this.activeSessions.delete(effectiveSessionId);
+        const projectSessions = this.sessionsByProject.get(projectId);
+        if (projectSessions) {
+          projectSessions.delete(effectiveSessionId);
+          if (projectSessions.size === 0) {
+            this.sessionsByProject.delete(projectId);
+          }
+        }
 
         // Cleanup temp file
         if (historyFileCreated && existsSync(historyFile)) {
@@ -294,7 +310,7 @@ export class InsightsExecutor extends EventEmitter {
           }
         }
 
-        this.emit('error', projectId, err.message);
+        this.emit('error', effectiveSessionId, err.message);
         reject(err);
       });
     });
