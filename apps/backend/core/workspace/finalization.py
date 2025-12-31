@@ -491,3 +491,20 @@ def cleanup_all_worktrees(project_dir: Path, confirm: bool = True) -> bool:
     print()
     print_status(f"Cleaned up {len(worktrees)} worktree(s).", "success")
     return True
+
+
+def cleanup_merged_tasks(project_dir: Path, dry_run: bool = False) -> dict:
+    """
+    Clean up tasks that are safely merged into base branch.
+    
+    SAFE: Only removes branches that are fully merged - never deletes unmerged work.
+    
+    Args:
+        project_dir: Main project directory
+        dry_run: If True, only report what would be cleaned
+        
+    Returns:
+        dict with cleanup statistics
+    """
+    manager = WorktreeManager(project_dir)
+    return manager.cleanup_merged_tasks(dry_run=dry_run)

@@ -29,6 +29,7 @@ from ui import (
 )
 from workspace import (
     cleanup_all_worktrees,
+    cleanup_merged_tasks,
     discard_existing_build,
     list_all_worktrees,
     merge_existing_build,
@@ -350,6 +351,40 @@ def handle_cleanup_worktrees_command(project_dir: Path) -> None:
     """
     print_banner()
     cleanup_all_worktrees(project_dir, confirm=True)
+
+
+def handle_cleanup_merged_command(project_dir: Path, dry_run: bool = False) -> None:
+    """
+    Handle the --cleanup-merged command.
+    
+    SAFE: Only removes branches that are fully merged into base branch.
+    Never deletes unmerged work.
+
+    Args:
+        project_dir: Project root directory
+        dry_run: If True, only show what would be cleaned
+    """
+    print_banner()
+    
+    if dry_run:
+        print()
+        print(f"{icon(Icons.INFO)} DRY RUN MODE - No changes will be made")
+        print()
+    
+    result = cleanup_merged_tasks(project_dir, dry_run=dry_run)
+    
+    if not dry_run and result["cleaned"]:
+        print()
+        print(f"{icon(Icons.SUCCESS)} Successfully cleaned {len(result['cleaned'])} merged task(s)")
+        print()
+        print("Note: Spec directories were preserved for history")
+    elif result["cleaned"] and dry_run:
+        print()
+        print(f"{icon(Icons.INFO)} Would clean {len(result['cleaned'])} merged task(s)")
+        print("Run without --dry-run to actually delete them")
+    elif not result["cleaned"] and not result["kept_unmerged"]:
+        print()
+        print(f"{icon(Icons.INFO)} No auto-claude branches found")
 
 
 def _check_git_merge_conflicts(project_dir: Path, spec_name: str) -> dict:

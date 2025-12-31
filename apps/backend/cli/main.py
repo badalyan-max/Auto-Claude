@@ -37,6 +37,7 @@ from .utils import (
     setup_environment,
 )
 from .workspace_commands import (
+    handle_cleanup_merged_command,
     handle_cleanup_worktrees_command,
     handle_discard_command,
     handle_list_worktrees_command,
@@ -215,6 +216,16 @@ Environment Variables:
         action="store_true",
         help="Remove all spec worktrees and their branches (with confirmation)",
     )
+    parser.add_argument(
+        "--cleanup-merged",
+        action="store_true",
+        help="SAFE: Remove only merged tasks (preserves unmerged work)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="For --cleanup-merged: show what would be cleaned without deleting",
+    )
 
     # Force bypass
     parser.add_argument(
@@ -294,6 +305,11 @@ def main() -> None:
     # Handle --cleanup-worktrees command
     if args.cleanup_worktrees:
         handle_cleanup_worktrees_command(project_dir)
+        return
+
+    # Handle --cleanup-merged command
+    if args.cleanup_merged:
+        handle_cleanup_merged_command(project_dir, dry_run=args.dry_run)
         return
 
     # Handle batch commands

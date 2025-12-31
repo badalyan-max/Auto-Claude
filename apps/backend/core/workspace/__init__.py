@@ -45,6 +45,7 @@ from .display import (
 from .finalization import (
     check_existing_build,
     cleanup_all_worktrees,
+    cleanup_merged_tasks,
     discard_existing_build,
     finalize_workspace,
     handle_workspace_choice,
@@ -141,4 +142,5 @@ __all__ = [
     "check_existing_build",
     "list_all_worktrees",
     "cleanup_all_worktrees",
+    "cleanup_merged_tasks",
 ]
