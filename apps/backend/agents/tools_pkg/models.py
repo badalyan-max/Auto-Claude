@@ -250,10 +250,13 @@ AGENT_CONFIGS = {
     # UTILITY PHASES (Minimal, no MCP)
     # ═══════════════════════════════════════════════════════════════════════
     "insights": {
-        "tools": BASE_READ_TOOLS + WEB_TOOLS,
-        "mcp_servers": [],
+        # FULL ACCESS MODE: Insights has same permissions as user (like Claude in Cursor)
+        # Can execute git push, system commands, edit files, etc.
+        "tools": BASE_READ_TOOLS + BASE_WRITE_TOOLS + WEB_TOOLS,
+        "mcp_servers": ["context7"],  # For documentation lookup
         "auto_claude_tools": [],
         "thinking_default": "medium",
+        "extended_permissions": True,  # Enable full system access
     },
     "merge_resolver": {
         "tools": [],  # Text-only analysis

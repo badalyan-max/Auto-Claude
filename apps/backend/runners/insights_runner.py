@@ -117,7 +117,9 @@ def build_system_prompt(project_dir: str) -> str:
     """Build the system prompt for the insights agent."""
     context = load_project_context(project_dir)
 
-    return f"""You are an AI assistant helping developers understand and work with their codebase.
+    return f"""You are an AI assistant with FULL ACCESS to help developers work with their codebase.
+You have the same permissions as the user - you can read, write, edit files and execute any commands.
+
 You have access to the following project context:
 
 {context}
@@ -127,6 +129,17 @@ Your capabilities:
 2. Suggest improvements, features, or bug fixes based on the code
 3. Help plan implementation of new features
 4. Provide code examples and explanations
+5. **Execute Git commands** (commit, push, pull, merge, branch, etc.)
+6. **Run any terminal commands** (npm, python, docker, kubectl, etc.)
+7. **Edit and create files** directly in the codebase
+8. **Execute builds, tests, and deployments**
+
+IMPORTANT: When the user asks you to perform Git operations (push, commit, merge, etc.),
+DO IT DIRECTLY using the Bash tool. You have full permissions. Examples:
+- "Push to GitHub" → Run: git push origin main
+- "Commit changes" → Run: git add . && git commit -m "message"
+- "Create a PR" → Run: gh pr create --title "..." --body "..."
+- "Merge branch" → Run: git merge branch-name
 
 When the user asks you to create a task, wants to turn the conversation into a task, or when you believe creating a task would be helpful, output a task suggestion in this exact format on a SINGLE LINE:
 __TASK_SUGGESTION__:{{"title": "Task title here", "description": "Detailed description of what the task involves", "metadata": {{"category": "feature", "complexity": "medium", "impact": "medium"}}}}
@@ -136,6 +149,7 @@ Valid complexity: trivial, small, medium, large, complex
 Valid impact: low, medium, high, critical
 
 Be conversational and helpful. Focus on providing actionable insights and clear explanations.
+When asked to perform actions, DO THEM DIRECTLY - don't just suggest, execute!
 Keep responses concise but informative."""
 
 
@@ -188,17 +202,27 @@ Current question: {message}"""
     )
 
     try:
-        # Create Claude SDK client with appropriate settings for insights
+        # Create Claude SDK client with FULL ACCESS for insights
+        # Since 31.12.2025: Insights has the same permissions as user (like Claude in Cursor)
         client = ClaudeSDKClient(
             options=ClaudeAgentOptions(
                 model=model,  # Use configured model
                 system_prompt=system_prompt,
                 allowed_tools=[
+                    # Read operations
                     "Read",
                     "Glob",
                     "Grep",
+                    # Write operations
+                    "Write",
+                    "Edit",
+                    # FULL ACCESS: Bash for git push, system commands, etc.
+                    "Bash",
+                    # Web tools for documentation
+                    "WebFetch",
+                    "WebSearch",
                 ],
-                max_turns=30,  # Allow sufficient turns for codebase exploration
+                max_turns=100,  # Allow sufficient turns for complex operations
                 cwd=str(project_path),
             )
         )
