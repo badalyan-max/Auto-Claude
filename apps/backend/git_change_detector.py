@@ -295,20 +295,32 @@ class GitChangeDetector:
         
         return False
     
-    def get_context_for_agent(self) -> str:
+    def get_context_for_agent(self, always_include_history: bool = True) -> str:
         """
         Erstellt einen Context-String für AI-Agenten mit Git-Änderungen.
+        
+        Args:
+            always_include_history: Wenn True, immer Git-History zeigen (nicht nur neue Änderungen)
         
         Returns:
             Formatierter Context-String mit Git-Änderungen
         """
         changes = self.get_changes_since_index()
         
+        # Wenn keine neuen Änderungen und always_include_history=True,
+        # hole trotzdem die letzte Woche an Commits für den Kontext
+        if not changes.has_changes and always_include_history:
+            changes = self._get_recent_changes(days=7)
+            
+            if not changes.has_changes:
+                # Fallback: hole letzte 10 Commits unabhängig vom Datum
+                changes = self._get_last_n_commits(n=10)
+        
         if not changes.has_changes:
             return ""
         
         context_parts = [
-            "## Recent Git Changes (External Modifications)",
+            "## Recent Git History (Project Changes)",
             "",
             changes.summary,
             ""
@@ -336,12 +348,88 @@ class GitChangeDetector:
         
         context_parts.append("")
         context_parts.append(
-            "**IMPORTANT**: These external changes should be considered when "
-            "generating roadmaps, insights, or ideations. They represent real "
-            "code modifications that may not be reflected in Auto Claude's memory yet."
+            "**IMPORTANT**: Consider these recent project changes when "
+            "generating roadmaps, insights, or ideations. They represent the "
+            "current state and recent evolution of the codebase."
         )
         
         return "\n".join(context_parts)
+    
+    def _get_last_n_commits(self, n: int = 10) -> GitChangeSummary:
+        """Hole die letzten N Commits unabhängig vom Datum."""
+        try:
+            git_cmd = self._find_git_command()
+            
+            cmd_str = f'"{git_cmd}" log "-n" "{n}" "--pretty=format:%H|%an|%ad|%s" "--date=iso"'
+            result = subprocess.run(
+                cmd_str,
+                cwd=self.project_dir,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                shell=True,
+            )
+            
+            if result.returncode != 0:
+                return GitChangeSummary(
+                    has_changes=False,
+                    commits_since_index=0,
+                    changed_files=[],
+                    recent_commits=[],
+                    summary="Keine Git-History"
+                )
+            
+            commits = []
+            for line in result.stdout.strip().split("\n"):
+                if not line:
+                    continue
+                parts = line.split("|", 3)
+                if len(parts) == 4:
+                    commits.append({
+                        "hash": parts[0][:8],
+                        "author": parts[1],
+                        "date": parts[2],
+                        "message": parts[3]
+                    })
+            
+            # Hole geänderte Dateien der letzten N Commits
+            cmd_files = f'"{git_cmd}" log "-n" "{n}" "--name-only" "--pretty=format:"'
+            result_files = subprocess.run(
+                cmd_files,
+                cwd=self.project_dir,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                shell=True,
+            )
+            
+            changed_files = []
+            if result_files.returncode == 0:
+                files = set()
+                for line in result_files.stdout.strip().split("\n"):
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        files.add(line)
+                changed_files = sorted(files)
+            
+            summary = self._create_summary(commits, changed_files)
+            
+            return GitChangeSummary(
+                has_changes=len(commits) > 0,
+                commits_since_index=len(commits),
+                changed_files=changed_files,
+                recent_commits=commits[:10],
+                summary=summary
+            )
+            
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, OSError):
+            return GitChangeSummary(
+                has_changes=False,
+                commits_since_index=0,
+                changed_files=[],
+                recent_commits=[],
+                summary="Keine Git-History verfuegbar"
+            )
 
 
 def get_git_changes(project_dir: Path) -> GitChangeSummary:
