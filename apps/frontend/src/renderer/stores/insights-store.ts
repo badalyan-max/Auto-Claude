@@ -260,7 +260,7 @@ export async function clearSession(projectId: string): Promise<void> {
   }
 }
 
-export async function newSession(projectId: string): Promise<void> {
+export async function newSession(projectId: string): Promise<InsightsSession | null> {
   const result = await window.electronAPI.newInsightsSession(projectId);
   if (result.success && result.data) {
     useInsightsStore.getState().setSession(result.data);
@@ -337,6 +337,17 @@ export async function createTaskFromSuggestion(
     return result.data;
   }
   return null;
+}
+
+// Helper function to open a session as a tab
+export async function openSessionAsTab(projectId: string, sessionId: string, title: string): Promise<void> {
+  const store = useInsightsStore.getState();
+
+  // Open the tab (this will also set it as active)
+  store.openTab(sessionId, title);
+
+  // Switch to the session to load its content
+  await switchSession(projectId, sessionId);
 }
 
 // IPC listener setup - call this once when the app initializes
