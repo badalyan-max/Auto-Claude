@@ -1,7 +1,8 @@
 {
-  "last_sync": "2026-01-01T02:40:10.412405",
-  "total_syncs": 30,
+  "last_sync": "2026-01-01T02:40:24.414544",
+  "total_syncs": 26,
   "last_files": [
-    "apps/frontend/src/preload/api/modules/insights-api.ts"
+    "apps/frontend/src/preload/api/modules/insights-api.ts",
+    "apps/frontend/src/shared/types/ipc.ts"
   ]
 }

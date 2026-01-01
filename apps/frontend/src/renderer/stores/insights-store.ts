@@ -306,6 +306,28 @@ export function sendMessage(projectId: string, message: string, modelConfig?: In
   window.electronAPI.sendInsightsMessage(projectId, message, configToUse);
 }
 
+/**
+ * Cancel/Stop the current running session
+ */
+export async function cancelSession(projectId: string, sessionId?: string): Promise<boolean> {
+  const store = useInsightsStore.getState();
+  
+  try {
+    const result = await window.electronAPI.cancelInsightsSession(projectId, sessionId);
+    if (result.success) {
+      // Reset status to idle
+      store.setStatus({ phase: 'idle', message: '' });
+      store.clearStreamingContent();
+      store.setCurrentTool(null);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('[Insights] Failed to cancel session:', error);
+    return false;
+  }
+}
+
 export async function clearSession(projectId: string): Promise<void> {
   const result = await window.electronAPI.clearInsightsSession(projectId);
   if (result.success) {

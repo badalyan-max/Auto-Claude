@@ -13,7 +13,12 @@ import {
   FileText,
   FolderSearch,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Square,
+  Paperclip,
+  X,
+  Image as ImageIcon,
+  File
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,7 +39,8 @@ import {
   updateModelConfig,
   createTaskFromSuggestion,
   setupInsightsListeners,
-  openSessionAsTab
+  openSessionAsTab,
+  cancelSession
 } from '../stores/insights-store';
 import { loadTasks } from '../stores/task-store';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
@@ -107,9 +113,11 @@ export function Insights({ projectId }: InsightsProps) {
   const [creatingTask, setCreatingTask] = useState<string | null>(null);
   const [taskCreated, setTaskCreated] = useState<Set<string>>(new Set());
   const [showSidebar, setShowSidebar] = useState(true);
+  const [attachedFiles, setAttachedFiles] = useState<Array<{ name: string; type: string; data: string }>>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load session and set up listeners on mount
   useEffect(() => {
