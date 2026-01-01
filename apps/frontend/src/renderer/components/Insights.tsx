@@ -210,8 +210,13 @@ export function Insights({ projectId }: InsightsProps) {
     await cancelSession(projectId, session?.id);
   };
   const handleTabSelect = async (sessionId: string) => {
+    // IMMEDIATELY reset status and streaming content before switching
+    // This prevents the "blocked input" bug when switching tabs
+    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
+    useInsightsStore.getState().clearStreamingContent();
+    useInsightsStore.getState().setCurrentTool(null);
+    
     setActiveTab(sessionId);
-    // Always switch session to reset status and load correct content
     await switchSession(projectId, sessionId);
   };
 
