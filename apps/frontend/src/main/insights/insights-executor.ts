@@ -118,6 +118,7 @@ export class InsightsExecutor extends EventEmitter {
    * @param conversationHistory - Previous messages
    * @param modelConfig - Optional model configuration
    * @param sessionId - Optional session ID (for parallel sessions). If not provided, uses projectId.
+   * @param attachments - Optional file attachments
    */
   async execute(
     projectId: string,
@@ -125,7 +126,8 @@ export class InsightsExecutor extends EventEmitter {
     message: string,
     conversationHistory: Array<{ role: string; content: string }>,
     modelConfig?: InsightsModelConfig,
-    sessionId?: string
+    sessionId?: string,
+    attachments?: Array<{ name: string; type: string; data: string }>
   ): Promise<ProcessorResult> {
     // Use sessionId if provided, otherwise fall back to projectId for backwards compatibility
     const effectiveSessionId = sessionId || projectId;
@@ -183,6 +185,23 @@ export class InsightsExecutor extends EventEmitter {
       const modelId = MODEL_ID_MAP[modelConfig.model] || MODEL_ID_MAP['sonnet'];
       args.push('--model', modelId);
       args.push('--thinking-level', modelConfig.thinkingLevel);
+    }
+
+    // Write attachments to temp file if provided
+    let attachmentsFile: string | null = null;
+    let attachmentsFileCreated = false;
+    if (attachments && attachments.length > 0) {
+      attachmentsFile = path.join(
+        os.tmpdir(),
+        `insights-attachments-${projectId}-${Date.now()}.json`
+      );
+      try {
+        writeFileSync(attachmentsFile, JSON.stringify(attachments), 'utf-8');
+        attachmentsFileCreated = true;
+        args.push('--attachments-file', attachmentsFile);
+      } catch (err) {
+        console.error('[Insights] Failed to write attachments file:', err);
+      }
     }
 
     // Spawn Python process
@@ -250,12 +269,19 @@ export class InsightsExecutor extends EventEmitter {
           }
         }
 
-        // Cleanup temp file
+        // Cleanup temp files
         if (historyFileCreated && existsSync(historyFile)) {
           try {
             unlinkSync(historyFile);
           } catch (cleanupErr) {
             console.error('[Insights] Failed to cleanup history file:', cleanupErr);
+          }
+        }
+        if (attachmentsFileCreated && attachmentsFile && existsSync(attachmentsFile)) {
+          try {
+            unlinkSync(attachmentsFile);
+          } catch (cleanupErr) {
+            console.error('[Insights] Failed to cleanup attachments file:', cleanupErr);
           }
         }
 
@@ -301,12 +327,19 @@ export class InsightsExecutor extends EventEmitter {
           }
         }
 
-        // Cleanup temp file
+        // Cleanup temp files
         if (historyFileCreated && existsSync(historyFile)) {
           try {
             unlinkSync(historyFile);
           } catch (cleanupErr) {
             console.error('[Insights] Failed to cleanup history file:', cleanupErr);
+          }
+        }
+        if (attachmentsFileCreated && attachmentsFile && existsSync(attachmentsFile)) {
+          try {
+            unlinkSync(attachmentsFile);
+          } catch (cleanupErr) {
+            console.error('[Insights] Failed to cleanup attachments file:', cleanupErr);
           }
         }
 

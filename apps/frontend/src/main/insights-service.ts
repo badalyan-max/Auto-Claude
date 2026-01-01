@@ -110,6 +110,91 @@ export class InsightsService extends EventEmitter {
   }
 
   /**
+   * Send a message with file attachments and get AI response
+   */
+  async sendMessageWithFiles(
+    projectId: string,
+    projectPath: string,
+    message: string,
+    files: Array<{ name: string; type: string; data: string }>,
+    modelConfig?: InsightsModelConfig
+  ): Promise<void> {
+    // Validate auto-claude source
+    const autoBuildSource = this.config.getAutoBuildSourcePath();
+    if (!autoBuildSource) {
+      this.emit('error', projectId, 'Auto Claude source not found');
+      return;
+    }
+
+    // Load or create session
+    let session = this.sessionManager.loadSession(projectId, projectPath);
+    if (!session) {
+      session = this.sessionManager.createNewSession(projectId, projectPath);
+    }
+
+    const sessionId = session.id;
+
+    if (this.executor.isSessionActive(sessionId)) {
+      this.executor.cancelSession(sessionId);
+    }
+
+    if (session.messages.length === 0 && session.title === 'New Conversation') {
+      session.title = this.storage.generateTitle(message);
+    }
+
+    // Create message content with file info
+    let messageWithFiles = message;
+    if (files.length > 0) {
+      const fileNames = files.map(f => f.name).join(', ');
+      messageWithFiles = `${message}\n\n[Attached files: ${fileNames}]`;
+    }
+
+    const userMessage: InsightsChatMessage = {
+      id: `msg-${Date.now()}`,
+      role: 'user',
+      content: messageWithFiles,
+      timestamp: new Date()
+    };
+    session.messages.push(userMessage);
+    session.updatedAt = new Date();
+    this.sessionManager.saveSession(projectPath, session);
+
+    const conversationHistory = session.messages.map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    const configToUse = modelConfig || session.modelConfig;
+
+    try {
+      const result = await this.executor.execute(
+        projectId,
+        projectPath,
+        message,
+        conversationHistory,
+        configToUse,
+        sessionId,
+        files // Pass files to executor
+      );
+
+      const assistantMessage: InsightsChatMessage = {
+        id: `msg-${Date.now()}`,
+        role: 'assistant',
+        content: result.fullResponse,
+        timestamp: new Date(),
+        suggestedTask: result.suggestedTask,
+        toolsUsed: result.toolsUsed.length > 0 ? result.toolsUsed : undefined
+      };
+
+      session.messages.push(assistantMessage);
+      session.updatedAt = new Date();
+      this.sessionManager.saveSession(projectPath, session);
+    } catch (error) {
+      console.error('[InsightsService] Error executing insights with files:', error);
+    }
+  }
+
+  /**
    * Send a message and get AI response
    * 
    * MULTI-SESSION MODE (since 31.12.2025):
