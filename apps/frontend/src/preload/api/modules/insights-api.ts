@@ -59,6 +59,9 @@ export const createInsightsAPI = (): InsightsAPI => ({
   clearInsightsSession: (projectId: string): Promise<IPCResult> =>
     invokeIpc(IPC_CHANNELS.INSIGHTS_CLEAR_SESSION, projectId),
 
+  cancelInsightsSession: (projectId: string, sessionId?: string): Promise<IPCResult<{ cancelled: number }>> =>
+    invokeIpc(IPC_CHANNELS.INSIGHTS_CANCEL_SESSION, projectId, sessionId),
+
   createTaskFromInsights: (
     projectId: string,
     title: string,
