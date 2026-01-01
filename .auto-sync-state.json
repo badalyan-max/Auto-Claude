@@ -1,7 +1,7 @@
 {
-  "last_sync": "2026-01-01T11:53:36.972821",
-  "total_syncs": 36,
+  "last_sync": "2026-01-01T12:01:38.244099",
+  "total_syncs": 34,
   "last_files": [
-    "apps/frontend/src/renderer/components/Insights.tsx"
+    "apps/frontend/src/main/terminal/pty-manager.ts"
   ]
 }

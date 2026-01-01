@@ -205,6 +205,19 @@ export function TerminalGrid({ projectPath, onNewTaskClick, isActive = false }: 
     }
   }, [addTerminal, canAddTerminal, projectPath]);
 
+  const handleAddClaudeTerminal = useCallback(async () => {
+    if (canAddTerminal()) {
+      const terminalId = addTerminal(projectPath, projectPath);
+      // Wait for terminal to be created, then invoke Claude
+      setTimeout(() => {
+        if (terminalId) {
+          setClaudeMode(terminalId, true);
+          window.electronAPI.invokeClaudeInTerminal(terminalId, projectPath);
+        }
+      }, 500);
+    }
+  }, [addTerminal, canAddTerminal, projectPath, setClaudeMode]);
+
   const handleInvokeClaudeAll = useCallback(() => {
     terminals.forEach((terminal) => {
       if (terminal.status === 'running' && !terminal.isClaudeMode) {
