@@ -373,6 +373,9 @@ def main():
         "--history-file", help="Path to JSON file containing conversation history"
     )
     parser.add_argument(
+        "--attachments-file", help="Path to JSON file containing file attachments (base64 encoded)"
+    )
+    parser.add_argument(
         "--model",
         default="claude-sonnet-4-5-20250929",
         help="Claude model ID (default: claude-sonnet-4-5-20250929)",
