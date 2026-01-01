@@ -158,30 +158,12 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewSession = async () => {
-    // Cancel any running session and reset status
-    if (session?.id) {
-      await cancelSession(projectId, session.id);
-    }
-    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
-    useInsightsStore.getState().clearStreamingContent();
-    useInsightsStore.getState().setCurrentTool(null);
-    useInsightsStore.getState().clearToolsUsed();
-    
     await newSession(projectId);
     setTaskCreated(new Set());
     textareaRef.current?.focus();
   };
 
   const handleSelectSession = async (sessionId: string) => {
-    // Cancel any running session and reset status IMMEDIATELY
-    if (session?.id) {
-      await cancelSession(projectId, session.id);
-    }
-    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
-    useInsightsStore.getState().clearStreamingContent();
-    useInsightsStore.getState().setCurrentTool(null);
-    useInsightsStore.getState().clearToolsUsed();
-    
     if (sessionId !== session?.id) {
       await switchSession(projectId, sessionId);
     }
@@ -228,17 +210,10 @@ export function Insights({ projectId }: InsightsProps) {
     await cancelSession(projectId, session?.id);
   };
   const handleTabSelect = async (sessionId: string) => {
-    // Cancel any running session and reset status IMMEDIATELY
-    if (session?.id && session.id !== sessionId) {
-      await cancelSession(projectId, session.id);
-    }
-    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
-    useInsightsStore.getState().clearStreamingContent();
-    useInsightsStore.getState().setCurrentTool(null);
-    useInsightsStore.getState().clearToolsUsed();
-    
     setActiveTab(sessionId);
-    await switchSession(projectId, sessionId);
+    if (sessionId !== session?.id) {
+      await switchSession(projectId, sessionId);
+    }
   };
 
   const handleTabClose = (sessionId: string) => {
@@ -250,15 +225,6 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewTab = async () => {
-    // Cancel any running session and reset status
-    if (session?.id) {
-      await cancelSession(projectId, session.id);
-    }
-    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
-    useInsightsStore.getState().clearStreamingContent();
-    useInsightsStore.getState().setCurrentTool(null);
-    useInsightsStore.getState().clearToolsUsed();
-    
     const newSess = await newSession(projectId);
     if (newSess) {
       openTab(newSess.id, newSess.title || 'New Chat');
