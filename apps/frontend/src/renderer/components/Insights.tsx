@@ -158,10 +158,14 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewSession = async () => {
-    // Reset status before creating new session
+    // Cancel any running session and reset status
+    if (session?.id) {
+      await cancelSession(projectId, session.id);
+    }
     useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
     useInsightsStore.getState().clearStreamingContent();
     useInsightsStore.getState().setCurrentTool(null);
+    useInsightsStore.getState().clearToolsUsed();
     
     await newSession(projectId);
     setTaskCreated(new Set());
@@ -246,10 +250,14 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewTab = async () => {
-    // Reset status before creating new tab
+    // Cancel any running session and reset status
+    if (session?.id) {
+      await cancelSession(projectId, session.id);
+    }
     useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
     useInsightsStore.getState().clearStreamingContent();
     useInsightsStore.getState().setCurrentTool(null);
+    useInsightsStore.getState().clearToolsUsed();
     
     const newSess = await newSession(projectId);
     if (newSess) {
