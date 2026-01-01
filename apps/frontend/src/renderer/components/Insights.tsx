@@ -226,9 +226,11 @@ export function Insights({ projectId }: InsightsProps) {
     if (!files) return;
 
     for (const file of Array.from(files)) {
-      // Check file size (max 20MB)
-      if (file.size > 20 * 1024 * 1024) {
-        console.warn(`File ${file.name} is too large (max 20MB)`);
+      // Check file size (max 100MB for videos, 20MB for others)
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 20 * 1024 * 1024;
+      if (file.size > maxSize) {
+        console.warn(`File ${file.name} is too large (max ${isVideo ? '100MB' : '20MB'})`);
         continue;
       }
 
