@@ -14,12 +14,7 @@ import {
   FolderSearch,
   PanelLeftClose,
   PanelLeft,
-  Square,
-  Paperclip,
-  X,
-  Image as ImageIcon,
-  File,
-  Video
+  Square
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -114,11 +109,9 @@ export function Insights({ projectId }: InsightsProps) {
   const [creatingTask, setCreatingTask] = useState<string | null>(null);
   const [taskCreated, setTaskCreated] = useState<Set<string>>(new Set());
   const [showSidebar, setShowSidebar] = useState(true);
-  const [attachedFiles, setAttachedFiles] = useState<Array<{ name: string; type: string; data: string }>>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load session and set up listeners on mount
   useEffect(() => {
@@ -151,14 +144,10 @@ export function Insights({ projectId }: InsightsProps) {
 
   const handleSend = () => {
     const message = inputValue.trim();
-    if ((!message && attachedFiles.length === 0) || status.phase === 'thinking' || status.phase === 'streaming') return;
-
-    // Prepare files for sending
-    const filesToSend = attachedFiles.length > 0 ? attachedFiles : undefined;
+    if (!message || status.phase === 'thinking' || status.phase === 'streaming') return;
 
     setInputValue('');
-    setAttachedFiles([]);
-    sendMessage(projectId, message || 'Please analyze the attached file(s).', undefined, filesToSend);
+    sendMessage(projectId, message);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -257,9 +246,8 @@ export function Insights({ projectId }: InsightsProps) {
   };
   const handleTabSelect = async (sessionId: string) => {
     setActiveTab(sessionId);
-    if (sessionId !== session?.id) {
-      await switchSession(projectId, sessionId);
-    }
+    // Always switch session to reset status and load correct content
+    await switchSession(projectId, sessionId);
   };
 
   const handleTabClose = (sessionId: string) => {
