@@ -454,7 +454,54 @@ export function Insights({ projectId }: InsightsProps) {
 
       {/* Input */}
       <div className="border-t border-border p-4">
+        {/* Attached Files Preview */}
+        {attachedFiles.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {attachedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5 text-sm"
+              >
+                {file.type.startsWith('image/') ? (
+                  <ImageIcon className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <File className="h-4 w-4 text-amber-500" />
+                )}
+                <span className="max-w-[150px] truncate">{file.name}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 p-0"
+                  onClick={() => handleRemoveFile(index)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2">
+          {/* File Upload Button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.txt,.md,.json,.js,.ts,.py,.html,.css"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="self-end shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isLoading}
+            title="Attach files (images, PDFs, code)"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+
           <Textarea
             ref={textareaRef}
             value={inputValue}
@@ -464,20 +511,29 @@ export function Insights({ projectId }: InsightsProps) {
             className="min-h-[80px] resize-none"
             disabled={isLoading}
           />
-          <Button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isLoading}
-            className="self-end"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
+
+          {/* Stop or Send Button */}
+          {isLoading ? (
+            <Button
+              variant="destructive"
+              onClick={handleStop}
+              className="self-end"
+              title="Stop generation"
+            >
+              <Square className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSend}
+              disabled={!inputValue.trim() && attachedFiles.length === 0}
+              className="self-end"
+            >
               <Send className="h-4 w-4" />
-            )}
-          </Button>
+            </Button>
+          )}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Press Enter to send, Shift+Enter for new line
+          Press Enter to send, Shift+Enter for new line. Attach images, PDFs, or code files.
         </p>
       </div>
       </div>
