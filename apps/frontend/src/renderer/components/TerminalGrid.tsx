@@ -394,6 +394,17 @@ export function TerminalGrid({ projectPath, onNewTaskClick, isActive = false }: 
                 {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+T
               </kbd>
             </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={handleAddClaudeTerminal}
+              disabled={!canAddTerminal()}
+              title="Create terminal and start Claude immediately"
+            >
+              <Sparkles className="h-3 w-3" />
+              New Claude Terminal
+            </Button>
             {/* File explorer toggle button */}
             {projectPath && (
               <Button

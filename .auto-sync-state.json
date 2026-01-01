@@ -1,7 +1,7 @@
 {
-  "last_sync": "2026-01-01T12:01:38.244099",
-  "total_syncs": 34,
+  "last_sync": "2026-01-01T12:01:45.720368",
+  "total_syncs": 28,
   "last_files": [
-    "apps/frontend/src/main/terminal/pty-manager.ts"
+    "apps/frontend/src/renderer/components/TerminalGrid.tsx"
   ]
 }
