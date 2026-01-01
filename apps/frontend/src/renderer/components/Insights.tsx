@@ -120,12 +120,7 @@ export function Insights({ projectId }: InsightsProps) {
     return cleanup;
   }, [projectId]);
 
-  // Auto-open current session as tab when session loads
-  useEffect(() => {
-    if (session && !openTabs.find(tab => tab.sessionId === session.id)) {
-      openTab(session.id, session.title || 'New Chat');
-    }
-  }, [session?.id]);
+  // Auto-open tabs disabled - causes state mixing issues
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -303,16 +298,8 @@ export function Insights({ projectId }: InsightsProps) {
           </div>
         </div>
 
-        {/* Tab Bar */}
-        {openTabs.length > 0 && (
-          <InsightsTabBar
-            tabs={openTabs}
-            activeTabId={activeTabId}
-            onTabSelect={handleTabSelect}
-            onTabClose={handleTabClose}
-            onNewTab={handleNewTab}
-          />
-        )}
+        {/* Tab Bar - DISABLED: Causes state mixing issues */}
+        {/* TODO: Re-implement with per-session state */}
 
       {/* Messages */}
       <ScrollArea className="flex-1 px-6 py-4">

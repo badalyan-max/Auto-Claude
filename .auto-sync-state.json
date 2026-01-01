@@ -1,7 +1,7 @@
 {
-  "last_sync": "2026-01-01T12:02:38.969762",
-  "total_syncs": 37,
+  "last_sync": "2026-01-01T12:04:39.817707",
+  "total_syncs": 35,
   "last_files": [
-    "apps/frontend/src/renderer/components/TerminalGrid.tsx"
+    "apps/frontend/src/renderer/stores/insights-store.ts"
   ]
 }

@@ -22,29 +22,19 @@ export interface InsightsTab {
   title: string;
 }
 
-// Per-session state to prevent mixing between tabs
-interface SessionState {
-  status: InsightsChatStatus;
-  streamingContent: string;
-  currentTool: ToolUsage | null;
-  toolsUsed: InsightsToolUsage[];
-}
-
 interface InsightsState {
   // Data
   session: InsightsSession | null;
   sessions: InsightsSessionSummary[]; // List of all sessions
-  status: InsightsChatStatus; // DEPRECATED - use sessionStates
+  status: InsightsChatStatus;
   pendingMessage: string;
-  streamingContent: string; // DEPRECATED - use sessionStates
-  currentTool: ToolUsage | null; // DEPRECATED - use sessionStates
-  toolsUsed: InsightsToolUsage[]; // DEPRECATED - use sessionStates
+  streamingContent: string; // Accumulates streaming response
+  currentTool: ToolUsage | null; // Currently executing tool
+  toolsUsed: InsightsToolUsage[]; // Tools used during current response
   isLoadingSessions: boolean;
   // Tab management
   openTabs: InsightsTab[]; // Currently open tabs
   activeTabId: string | null; // Currently active tab's session ID
-  // Per-session state (NEW - prevents tab mixing)
-  sessionStates: Map<string, SessionState>;
 
   // Actions
   setSession: (session: InsightsSession | null) => void;
@@ -66,15 +56,6 @@ interface InsightsState {
   closeTab: (sessionId: string) => void;
   setActiveTab: (sessionId: string | null) => void;
   updateTabTitle: (sessionId: string, newTitle: string) => void;
-  // Per-session state actions (NEW)
-  getSessionState: (sessionId: string) => SessionState;
-  setSessionStatus: (sessionId: string, status: InsightsChatStatus) => void;
-  setSessionStreamingContent: (sessionId: string, content: string) => void;
-  appendSessionStreamingContent: (sessionId: string, content: string) => void;
-  clearSessionStreamingContent: (sessionId: string) => void;
-  setSessionCurrentTool: (sessionId: string, tool: ToolUsage | null) => void;
-  addSessionToolUsage: (sessionId: string, tool: ToolUsage) => void;
-  clearSessionToolsUsed: (sessionId: string) => void;
 }
 
 const initialStatus: InsightsChatStatus = {
