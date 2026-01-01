@@ -1,7 +1,8 @@
 {
-  "last_sync": "2026-01-01T02:43:15.007675",
-  "total_syncs": 33,
+  "last_sync": "2026-01-01T02:44:07.740003",
+  "total_syncs": 26,
   "last_files": [
-    "apps/frontend/src/main/ipc-handlers/insights-handlers.ts"
+    "apps/frontend/src/main/insights-service.ts",
+    "apps/frontend/src/main/insights/insights-executor.ts"
   ]
 }
