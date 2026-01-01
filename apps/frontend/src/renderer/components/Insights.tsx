@@ -169,10 +169,14 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleSelectSession = async (sessionId: string) => {
-    // Reset status IMMEDIATELY before switching
+    // Cancel any running session and reset status IMMEDIATELY
+    if (session?.id) {
+      await cancelSession(projectId, session.id);
+    }
     useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
     useInsightsStore.getState().clearStreamingContent();
     useInsightsStore.getState().setCurrentTool(null);
+    useInsightsStore.getState().clearToolsUsed();
     
     if (sessionId !== session?.id) {
       await switchSession(projectId, sessionId);
@@ -220,11 +224,14 @@ export function Insights({ projectId }: InsightsProps) {
     await cancelSession(projectId, session?.id);
   };
   const handleTabSelect = async (sessionId: string) => {
-    // IMMEDIATELY reset status and streaming content before switching
-    // This prevents the "blocked input" bug when switching tabs
+    // Cancel any running session and reset status IMMEDIATELY
+    if (session?.id && session.id !== sessionId) {
+      await cancelSession(projectId, session.id);
+    }
     useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
     useInsightsStore.getState().clearStreamingContent();
     useInsightsStore.getState().setCurrentTool(null);
+    useInsightsStore.getState().clearToolsUsed();
     
     setActiveTab(sessionId);
     await switchSession(projectId, sessionId);
