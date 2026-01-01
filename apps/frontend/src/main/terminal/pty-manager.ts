@@ -5,6 +5,7 @@
 
 import * as pty from '@lydell/node-pty';
 import * as os from 'os';
+import * as path from 'path';
 import type { TerminalProcess, WindowGetter } from './types';
 import { IPC_CHANNELS } from '../../shared/constants';
 import { getClaudeProfileManager } from '../claude-profile-manager';
@@ -26,6 +27,16 @@ export function spawnPtyProcess(
 
   console.warn('[PtyManager] Spawning shell:', shell, shellArgs);
 
+  // Ensure npm global bin is in PATH for Claude CLI
+  const npmPath = process.platform === 'win32'
+    ? path.join(os.homedir(), 'AppData', 'Roaming', 'npm')
+    : '/usr/local/bin';
+  
+  const existingPath = process.env.PATH || '';
+  const enhancedPath = existingPath.includes(npmPath) 
+    ? existingPath 
+    : `${npmPath}${path.delimiter}${existingPath}`;
+
   return pty.spawn(shell, shellArgs, {
     name: 'xterm-256color',
     cols,
@@ -34,6 +45,7 @@ export function spawnPtyProcess(
     env: {
       ...process.env,
       ...profileEnv,
+      PATH: enhancedPath,  // Enhanced PATH with npm global bin
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
     },
