@@ -87,6 +87,12 @@ export const insightsMock = {
     console.warn('[Browser Mock] sendInsightsMessage called');
   },
 
+  sendInsightsMessageWithFiles: () => {
+    console.warn('[Browser Mock] sendInsightsMessageWithFiles called');
+  },
+
+  cancelInsightsSession: async () => ({ success: true, data: { cancelled: 1 } }),
+
   clearInsightsSession: async () => ({ success: true }),
 
   createTaskFromInsights: async (_projectId: string, title: string, description: string) => ({

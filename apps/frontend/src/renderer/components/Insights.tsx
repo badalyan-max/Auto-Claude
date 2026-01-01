@@ -150,10 +150,14 @@ export function Insights({ projectId }: InsightsProps) {
 
   const handleSend = () => {
     const message = inputValue.trim();
-    if (!message || status.phase === 'thinking' || status.phase === 'streaming') return;
+    if ((!message && attachedFiles.length === 0) || status.phase === 'thinking' || status.phase === 'streaming') return;
+
+    // Prepare files for sending
+    const filesToSend = attachedFiles.length > 0 ? attachedFiles : undefined;
 
     setInputValue('');
-    sendMessage(projectId, message);
+    setAttachedFiles([]);
+    sendMessage(projectId, message || 'Please analyze the attached file(s).', undefined, filesToSend);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
