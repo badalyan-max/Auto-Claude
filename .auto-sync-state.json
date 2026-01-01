@@ -1,7 +1,7 @@
 {
-  "last_sync": "2025-12-31T23:48:56.596545",
-  "total_syncs": 29,
+  "last_sync": "2025-12-31T23:51:48.084463",
+  "total_syncs": 21,
   "last_files": [
-    "apps/frontend/src/renderer/components/ChatHistorySidebar.tsx"
+    "apps/frontend/src/renderer/stores/insights-store.ts"
   ]
 }

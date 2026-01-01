@@ -258,6 +258,32 @@ export function registerInsightsHandlers(
     }
   );
 
+  // Cancel a running session (Stop button)
+  ipcMain.handle(
+    IPC_CHANNELS.INSIGHTS_CANCEL_SESSION,
+    async (_, projectId: string, sessionId?: string): Promise<IPCResult<{ cancelled: number }>> => {
+      try {
+        let cancelled = 0;
+        if (sessionId) {
+          // Cancel specific session
+          const executor = (insightsService as unknown as { executor: { cancelSession: (id: string) => boolean } }).executor;
+          if (executor.cancelSession(sessionId)) {
+            cancelled = 1;
+          }
+        } else {
+          // Cancel all sessions for this project
+          cancelled = insightsService.cancelAllSessionsForProject(projectId);
+        }
+        return { success: true, data: { cancelled } };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to cancel session'
+        };
+      }
+    }
+  );
+
   // ============================================
   // Insights Event Forwarding (Service -> Renderer)
   // ============================================
