@@ -48,6 +48,23 @@ export function registerInsightsHandlers(
     }
   );
 
+  // Send message with file attachments
+  ipcMain.on(
+    IPC_CHANNELS.INSIGHTS_SEND_MESSAGE_WITH_FILES,
+    async (_, projectId: string, message: string, files: Array<{ name: string; type: string; data: string }>, modelConfig?: InsightsModelConfig) => {
+      const project = projectStore.getProject(projectId);
+      if (!project) {
+        const mainWindow = getMainWindow();
+        if (mainWindow) {
+          mainWindow.webContents.send(IPC_CHANNELS.INSIGHTS_ERROR, projectId, 'Project not found');
+        }
+        return;
+      }
+
+      insightsService.sendMessageWithFiles(projectId, project.path, message, files, modelConfig);
+    }
+  );
+
   ipcMain.handle(
     IPC_CHANNELS.INSIGHTS_CLEAR_SESSION,
     async (_, projectId: string): Promise<IPCResult> => {

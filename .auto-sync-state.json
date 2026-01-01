@@ -1,7 +1,10 @@
 {
-  "last_sync": "2026-01-01T02:42:25.441309",
-  "total_syncs": 19,
+  "last_sync": "2026-01-01T02:43:06.238820",
+  "total_syncs": 25,
   "last_files": [
+    "apps/frontend/src/preload/api/modules/insights-api.ts",
+    "apps/frontend/src/shared/types/ipc.ts",
+    "apps/frontend/src/shared/constants/ipc.ts",
     "apps/backend/runners/insights_runner.py"
   ]
 }
