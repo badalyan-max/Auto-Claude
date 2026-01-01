@@ -159,6 +159,7 @@ async def run_with_sdk(
     history: list,
     model: str = "claude-sonnet-4-5-20250929",
     thinking_level: str = "medium",
+    attachments: list | None = None,
 ) -> None:
     """Run the chat using Claude SDK with streaming."""
     if not SDK_AVAILABLE:
@@ -426,9 +427,26 @@ def main():
         debug_error("insights_runner", f"Failed to load history: {e}")
         history = []
 
+    # Load attachments if provided
+    attachments = []
+    try:
+        if args.attachments_file:
+            debug(
+                "insights_runner", "Loading attachments from file", file=args.attachments_file
+            )
+            with open(args.attachments_file, encoding="utf-8") as f:
+                attachments = json.load(f)
+            debug_detailed(
+                "insights_runner",
+                "Loaded attachments",
+                count=len(attachments),
+            )
+    except (json.JSONDecodeError, FileNotFoundError, OSError) as e:
+        debug_error("insights_runner", f"Failed to load attachments: {e}")
+
     # Run the async SDK function
     debug("insights_runner", "Running SDK query")
-    asyncio.run(run_with_sdk(project_dir, user_message, history, model, thinking_level))
+    asyncio.run(run_with_sdk(project_dir, user_message, history, model, thinking_level, attachments))
     debug_success("insights_runner", "Query completed")
 
 
