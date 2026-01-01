@@ -158,12 +158,22 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewSession = async () => {
+    // Reset status before creating new session
+    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
+    useInsightsStore.getState().clearStreamingContent();
+    useInsightsStore.getState().setCurrentTool(null);
+    
     await newSession(projectId);
     setTaskCreated(new Set());
     textareaRef.current?.focus();
   };
 
   const handleSelectSession = async (sessionId: string) => {
+    // Reset status IMMEDIATELY before switching
+    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
+    useInsightsStore.getState().clearStreamingContent();
+    useInsightsStore.getState().setCurrentTool(null);
+    
     if (sessionId !== session?.id) {
       await switchSession(projectId, sessionId);
     }
@@ -229,6 +239,11 @@ export function Insights({ projectId }: InsightsProps) {
   };
 
   const handleNewTab = async () => {
+    // Reset status before creating new tab
+    useInsightsStore.getState().setStatus({ phase: 'idle', message: '' });
+    useInsightsStore.getState().clearStreamingContent();
+    useInsightsStore.getState().setCurrentTool(null);
+    
     const newSess = await newSession(projectId);
     if (newSess) {
       openTab(newSess.id, newSess.title || 'New Chat');
