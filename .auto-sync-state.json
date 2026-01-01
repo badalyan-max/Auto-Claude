@@ -1,6 +1,6 @@
 {
-  "last_sync": "2026-01-01T02:42:13.390966",
-  "total_syncs": 32,
+  "last_sync": "2026-01-01T02:42:25.441309",
+  "total_syncs": 19,
   "last_files": [
     "apps/backend/runners/insights_runner.py"
   ]

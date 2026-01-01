@@ -14,10 +14,18 @@ import { createIpcListener, invokeIpc, sendIpc, IpcListenerCleanup } from './ipc
 /**
  * Insights API operations
  */
+// File attachment for insights messages
+export interface InsightsFileAttachment {
+  name: string;
+  type: string;
+  data: string; // Base64 encoded data URI
+}
+
 export interface InsightsAPI {
   // Operations
   getInsightsSession: (projectId: string) => Promise<IPCResult<InsightsSession | null>>;
   sendInsightsMessage: (projectId: string, message: string, modelConfig?: InsightsModelConfig) => void;
+  sendInsightsMessageWithFiles: (projectId: string, message: string, files: InsightsFileAttachment[], modelConfig?: InsightsModelConfig) => void;
   clearInsightsSession: (projectId: string) => Promise<IPCResult>;
   cancelInsightsSession: (projectId: string, sessionId?: string) => Promise<IPCResult<{ cancelled: number }>>;
   createTaskFromInsights: (
@@ -55,6 +63,9 @@ export const createInsightsAPI = (): InsightsAPI => ({
 
   sendInsightsMessage: (projectId: string, message: string, modelConfig?: InsightsModelConfig): void =>
     sendIpc(IPC_CHANNELS.INSIGHTS_SEND_MESSAGE, projectId, message, modelConfig),
+
+  sendInsightsMessageWithFiles: (projectId: string, message: string, files: InsightsFileAttachment[], modelConfig?: InsightsModelConfig): void =>
+    sendIpc(IPC_CHANNELS.INSIGHTS_SEND_MESSAGE_WITH_FILES, projectId, message, files, modelConfig),
 
   clearInsightsSession: (projectId: string): Promise<IPCResult> =>
     invokeIpc(IPC_CHANNELS.INSIGHTS_CLEAR_SESSION, projectId),

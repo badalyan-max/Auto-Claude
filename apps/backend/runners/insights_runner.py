@@ -195,6 +195,44 @@ async def run_with_sdk(
 
 Current question: {message}"""
 
+    # Add attachment descriptions to the prompt
+    if attachments:
+        attachment_info = []
+        for att in attachments:
+            name = att.get("name", "file")
+            file_type = att.get("type", "unknown")
+            attachment_info.append(f"- {name} ({file_type})")
+        
+        full_prompt += f"\n\n[User attached {len(attachments)} file(s):\n" + "\n".join(attachment_info) + "]"
+        
+        # For text-based files, include content directly in the prompt
+        for att in attachments:
+            file_type = att.get("type", "")
+            data = att.get("data", "")
+            name = att.get("name", "file")
+            
+            # Handle text-based files (code, markdown, JSON, etc.)
+            if file_type.startswith("text/") or file_type in [
+                "application/json", "application/javascript", "application/typescript"
+            ] or name.endswith((".py", ".js", ".ts", ".tsx", ".jsx", ".md", ".txt", ".json", ".html", ".css")):
+                try:
+                    # Data might be base64 encoded with data URI prefix
+                    if data.startswith("data:"):
+                        # Extract base64 part after the comma
+                        base64_data = data.split(",", 1)[1] if "," in data else data
+                        import base64
+                        content = base64.b64decode(base64_data).decode("utf-8", errors="replace")
+                    else:
+                        content = data
+                    
+                    # Truncate very large files
+                    if len(content) > 50000:
+                        content = content[:50000] + "\n\n[... file truncated, showing first 50KB ...]"
+                    
+                    full_prompt += f"\n\n### File: {name}\n```\n{content}\n```"
+                except Exception as e:
+                    debug_error("insights_runner", f"Failed to decode file {name}: {e}")
+
     debug(
         "insights_runner",
         "Using model configuration",
