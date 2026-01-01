@@ -126,6 +126,13 @@ export function Insights({ projectId }: InsightsProps) {
     return cleanup;
   }, [projectId]);
 
+  // Auto-open current session as tab when session loads
+  useEffect(() => {
+    if (session && !openTabs.find(tab => tab.sessionId === session.id)) {
+      openTab(session.id, session.title || 'New Chat');
+    }
+  }, [session?.id]);
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
