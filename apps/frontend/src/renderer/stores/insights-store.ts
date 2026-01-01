@@ -277,29 +277,15 @@ export async function loadInsightsSession(projectId: string): Promise<void> {
   await loadInsightsSessions(projectId);
 }
 
-// File attachment interface
-export interface InsightsFileAttachment {
-  name: string;
-  type: string;
-  data: string; // Base64 encoded data URI
-}
-
-export function sendMessage(projectId: string, message: string, modelConfig?: InsightsModelConfig, files?: InsightsFileAttachment[]): void {
+export function sendMessage(projectId: string, message: string, modelConfig?: InsightsModelConfig): void {
   const store = useInsightsStore.getState();
   const session = store.session;
-
-  // Build message content with file info
-  let displayMessage = message;
-  if (files && files.length > 0) {
-    const fileNames = files.map(f => f.name).join(', ');
-    displayMessage = `${message}\n\n📎 Attached: ${fileNames}`;
-  }
 
   // Add user message to session
   const userMessage: InsightsChatMessage = {
     id: `msg-${Date.now()}`,
     role: 'user',
-    content: displayMessage,
+    content: message,
     timestamp: new Date()
   };
   store.addMessage(userMessage);
@@ -316,12 +302,8 @@ export function sendMessage(projectId: string, message: string, modelConfig?: In
   // Use provided modelConfig, or fall back to session's config
   const configToUse = modelConfig || session?.modelConfig;
 
-  // Send to main process - with or without files
-  if (files && files.length > 0) {
-    window.electronAPI.sendInsightsMessageWithFiles(projectId, message, files, configToUse);
-  } else {
-    window.electronAPI.sendInsightsMessage(projectId, message, configToUse);
-  }
+  // Send to main process
+  window.electronAPI.sendInsightsMessage(projectId, message, configToUse);
 }
 
 /**
