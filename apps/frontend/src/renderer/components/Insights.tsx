@@ -18,7 +18,8 @@ import {
   Paperclip,
   X,
   Image as ImageIcon,
-  File
+  File,
+  Video
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -468,6 +469,8 @@ export function Insights({ projectId }: InsightsProps) {
               >
                 {file.type.startsWith('image/') ? (
                   <ImageIcon className="h-4 w-4 text-blue-500" />
+                ) : file.type.startsWith('video/') ? (
+                  <Video className="h-4 w-4 text-purple-500" />
                 ) : (
                   <File className="h-4 w-4 text-amber-500" />
                 )}
@@ -491,7 +494,7 @@ export function Insights({ projectId }: InsightsProps) {
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/*,.pdf,.txt,.md,.json,.js,.ts,.py,.html,.css"
+            accept="image/*,video/*,.pdf,.txt,.md,.json,.js,.ts,.tsx,.jsx,.py,.html,.css,.scss,.svg,.xml,.yaml,.yml"
             className="hidden"
             onChange={handleFileSelect}
           />
@@ -501,7 +504,7 @@ export function Insights({ projectId }: InsightsProps) {
             className="self-end shrink-0"
             onClick={() => fileInputRef.current?.click()}
             disabled={isLoading}
-            title="Attach files (images, PDFs, code)"
+            title="Attach files (images, videos, PDFs, code)"
           >
             <Paperclip className="h-4 w-4" />
           </Button>
@@ -537,7 +540,7 @@ export function Insights({ projectId }: InsightsProps) {
           )}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Press Enter to send, Shift+Enter for new line. Attach images, PDFs, or code files.
+          Press Enter to send, Shift+Enter for new line. Attach images, videos, PDFs, or code files.
         </p>
       </div>
       </div>

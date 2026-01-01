@@ -1,7 +1,8 @@
 {
-  "last_sync": "2026-01-01T02:44:26.062853",
+  "last_sync": "2026-01-01T02:45:09.502884",
   "total_syncs": 27,
   "last_files": [
-    "apps/frontend/src/renderer/stores/insights-store.ts"
+    "apps/frontend/src/renderer/components/Insights.tsx",
+    "apps/frontend/src/renderer/lib/mocks/insights-mock.ts"
   ]
 }
