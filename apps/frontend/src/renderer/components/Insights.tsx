@@ -211,6 +211,43 @@ export function Insights({ projectId }: InsightsProps) {
       await updateModelConfig(projectId, session.id, config);
     }
   };
+
+  const handleStop = async () => {
+    await cancelSession(projectId, session?.id);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    for (const file of Array.from(files)) {
+      // Check file size (max 20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        console.warn(`File ${file.name} is too large (max 20MB)`);
+        continue;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        setAttachedFiles(prev => [...prev, {
+          name: file.name,
+          type: file.type,
+          data: base64
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
   const handleTabSelect = async (sessionId: string) => {
     setActiveTab(sessionId);
     if (sessionId !== session?.id) {
