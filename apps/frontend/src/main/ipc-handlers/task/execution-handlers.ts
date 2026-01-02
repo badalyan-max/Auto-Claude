@@ -9,6 +9,7 @@ import { fileWatcher } from '../../file-watcher';
 import { findTaskAndProject } from './shared';
 import { checkGitStatus } from '../../project-initializer';
 import { getClaudeProfileManager } from '../../claude-profile-manager';
+import { autoMergeTask, canAutoMerge } from '../../auto-merge-service';
 
 /**
  * Helper function to check subtask completion status
@@ -529,6 +530,44 @@ export function registerTaskExecutionHandlers(
               'in_progress'
             );
           }
+        }
+
+        // AUTO-MERGE: When task is moved to "done", auto-merge to main
+        if (status === 'done' && canAutoMerge(task)) {
+          console.log('[TASK_UPDATE_STATUS] Task moved to done, triggering auto-merge:', taskId);
+          const mainWindow = getMainWindow();
+
+          // Run auto-merge in background (don't block status update)
+          autoMergeTask(task, mainWindow).then((result) => {
+            if (result.success && result.merged) {
+              console.log('[TASK_UPDATE_STATUS] Auto-merge successful!', {
+                commitCount: result.commitCount,
+                pushed: result.pushed,
+                mergeCommit: result.mergeCommit
+              });
+
+              // Notify UI of successful auto-merge
+              if (mainWindow) {
+                mainWindow.webContents.send(IPC_CHANNELS.TASK_AUTO_MERGE_COMPLETE, {
+                  taskId,
+                  result
+                });
+              }
+            } else {
+              console.warn('[TASK_UPDATE_STATUS] Auto-merge failed:', result.error);
+
+              // Notify UI of failed auto-merge
+              if (mainWindow) {
+                mainWindow.webContents.send(IPC_CHANNELS.TASK_AUTO_MERGE_FAILED, {
+                  taskId,
+                  error: result.error,
+                  aiValidation: result.aiValidation
+                });
+              }
+            }
+          }).catch((error) => {
+            console.error('[TASK_UPDATE_STATUS] Auto-merge exception:', error);
+          });
         }
 
         return { success: true };

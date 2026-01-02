@@ -6,6 +6,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { cn, formatRelativeTime, sanitizeMarkdownForDisplay } from '../lib/utils';
 import { PhaseProgressIndicator } from './PhaseProgressIndicator';
+import { AutoMergeProgress } from './AutoMergeProgress';
 import {
   TASK_CATEGORY_LABELS,
   TASK_CATEGORY_COLORS,
@@ -404,6 +405,11 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           )}
         </div>
       </CardContent>
+
+      {/* Auto-Merge Progress - Show for "done" tasks */}
+      {task.status === 'done' && !task.metadata?.archivedAt && (
+        <AutoMergeProgress taskId={task.id} />
+      )}
     </Card>
   );
 }
