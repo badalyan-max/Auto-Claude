@@ -57,6 +57,7 @@ from ui import (
 from .base import AUTO_CONTINUE_DELAY_SECONDS, HUMAN_INTERVENTION_FILE
 from .memory_manager import debug_memory_system_status, get_graphiti_context
 from .session import post_session_processing, run_agent_session
+from agents.tools_pkg.tools import init_session_tracker
 from .utils import (
     find_phase_for_subtask,
     get_commit_count,
@@ -102,6 +103,9 @@ async def run_autonomous_agent(
 
     # Debug: Print memory system status at startup
     debug_memory_system_status()
+
+    # Initialize session commit tracker for validation
+    init_session_tracker(project_dir)
 
     # Update initial subtask counts
     subtasks = count_subtasks_detailed(spec_dir)
