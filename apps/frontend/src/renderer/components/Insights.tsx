@@ -424,14 +424,14 @@ export function Insights({ projectId }: InsightsProps) {
               <Square className="h-4 w-4" />
             </Button>
           ) : (
-            <Button
-              onClick={handleSend}
+          <Button
+            onClick={handleSend}
               disabled={!inputValue.trim()}
-              className="self-end"
-            >
+            className="self-end"
+          >
               <Send className="h-4 w-4" />
             </Button>
-          )}
+            )}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Press Enter to send, Shift+Enter for new line
