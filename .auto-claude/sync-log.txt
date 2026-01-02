@@ -1,0 +1,18 @@
+﻿[2025-12-31 11:05:09] ==========================================
+[2025-12-31 11:05:09] NEUER START
+[2025-12-31 11:05:09] Mode: interactive, Spec: , Task: , NoPull: True
+[2025-12-31 11:05:09] ==========================================
+[2025-12-31 11:05:09] KRITISCHER FEHLER: Die Benennung "Test-GitRepository" wurde nicht als Name eines Cmdlet, einer Funktion, einer Skriptdatei oder eines ausführbaren Programms erkannt. Überprüfen Sie die Schreibweise des Namens, oder ob der Pfad korrekt ist (sofern enthalten), und wiederholen Sie den Vorgang.
+[2025-12-31 11:05:10] bei Main, C:\Projekte\auto-claude\Start-Auto-Claude-With-Sync.ps1: Zeile 536
+bei <ScriptBlock>, C:\Projekte\auto-claude\Start-Auto-Claude-With-Sync.ps1: Zeile 596
+bei <ScriptBlock>, <Keine Datei>: Zeile 1
+[2025-12-31 11:05:58] ==========================================
+[2025-12-31 11:05:58] NEUER START
+[2025-12-31 11:05:58] Mode: interactive, Spec: , Task: , NoPull: True
+[2025-12-31 11:05:58] ==========================================
+[2025-12-31 11:05:58] Pruefe Git Repository
+[2025-12-31 11:05:58] Git Repository OK
+[2025-12-31 11:05:58] Pruefe uncommitted changes
+[2025-12-31 11:05:58] WARN: Uncommitted changes gefunden
+[2025-12-31 11:05:58] ERROR: Status check - Es ist nicht möglich, eine Methode für einen Ausdruck aufzurufen, der den NULL hat.
+[2025-12-31 11:05:58] ABBRUCH: Uncommitted Changes

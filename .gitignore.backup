@@ -54,7 +54,7 @@ lerna-debug.log*
 # ===========================
 # Auto Claude Generated
 # ===========================
-# .auto-claude/  ← AUSKOMMENTIERT für data-sync branch!
+.auto-claude/
 .auto-build-security.json
 .auto-claude-security.json
 .auto-claude-status

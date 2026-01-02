@@ -1,0 +1,59 @@
+{
+  "spec_id": "001-pending",
+  "created_at": "2025-12-30T14:05:25.349073+00:00",
+  "updated_at": "2025-12-30T14:06:38.188299+00:00",
+  "phases": {
+    "planning": {
+      "phase": "planning",
+      "status": "active",
+      "started_at": "2025-12-30T14:05:25.349073+00:00",
+      "completed_at": null,
+      "entries": [
+        {
+          "timestamp": "2025-12-30T14:05:25.349073+00:00",
+          "type": "phase_start",
+          "content": "Starting spec creation process",
+          "phase": "planning"
+        },
+        {
+          "timestamp": "2025-12-30T14:06:06.465922+00:00",
+          "type": "info",
+          "content": "Starting phase 1: PROJECT DISCOVERY",
+          "phase": "planning"
+        },
+        {
+          "timestamp": "2025-12-30T14:06:38.185299+00:00",
+          "type": "success",
+          "content": "Discovered 41 files in project",
+          "phase": "planning"
+        },
+        {
+          "timestamp": "2025-12-30T14:06:38.186299+00:00",
+          "type": "info",
+          "content": "Starting phase 2: REQUIREMENTS GATHERING",
+          "phase": "planning"
+        },
+        {
+          "timestamp": "2025-12-30T14:06:38.188299+00:00",
+          "type": "success",
+          "content": "Task: Erstelle eine einfache test.py Datei mit einer hello() Funktion",
+          "phase": "planning"
+        }
+      ]
+    },
+    "coding": {
+      "phase": "coding",
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "entries": []
+    },
+    "validation": {
+      "phase": "validation",
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "entries": []
+    }
+  }
+}
