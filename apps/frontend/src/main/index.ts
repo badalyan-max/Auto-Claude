@@ -227,10 +227,10 @@ app.whenReady().then(() => {
     // Setup event forwarding from usage monitor to renderer
     initializeUsageMonitorForwarding(mainWindow);
 
-    // Start the usage monitor
-    const usageMonitor = getUsageMonitor();
-    usageMonitor.start();
-    console.warn('[main] Usage monitor initialized and started');
+    // NOTE: Usage monitor disabled - API endpoint not available for Auto Claude
+    // const usageMonitor = getUsageMonitor();
+    // usageMonitor.start();
+    console.warn('[main] Usage monitor disabled (API not available)');
 
     // Log debug mode status
     const isDebugMode = process.env.DEBUG === 'true';
@@ -280,10 +280,10 @@ app.on('window-all-closed', () => {
 
 // Cleanup before quit
 app.on('before-quit', async () => {
-  // Stop usage monitor
-  const usageMonitor = getUsageMonitor();
-  usageMonitor.stop();
-  console.warn('[main] Usage monitor stopped');
+  // Stop usage monitor (disabled)
+  // const usageMonitor = getUsageMonitor();
+  // usageMonitor.stop();
+  // console.warn('[main] Usage monitor stopped');
 
   // Kill all running agent processes
   if (agentManager) {

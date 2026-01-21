@@ -253,12 +253,9 @@ async function generateChangelogForTask(
     }
 
     // Generate changelog using AI
-    const changelogEntry = await new Promise<string>((resolve, reject) => {
-      let generatedContent = '';
-
+    const generatedContent = await new Promise<string>((resolve, reject) => {
       changelogService.once('generation-complete', (_projectId, result) => {
-        generatedContent = result;
-        resolve(generatedContent);
+        resolve(result);
       });
 
       changelogService.once('generation-error', (_projectId, error) => {
@@ -283,7 +280,7 @@ async function generateChangelogForTask(
       setTimeout(() => reject(new Error('Changelog generation timeout')), 60000);
     });
 
-    if (!generatedContent) {
+    if (!generatedContent || generatedContent.trim().length === 0) {
       return { success: false, error: 'No changelog content generated' };
     }
 
@@ -338,8 +335,26 @@ async function mergeTaskBranch(
       cwd: projectPath
     });
 
+    // Stage changelog if it was generated
+    if (changelogPath) {
+      try {
+        await execFileAsync(getToolPath('git'), ['add', changelogPath], {
+          cwd: projectPath
+        });
+        console.log('[AutoMerge] Staged changelog:', changelogPath);
+      } catch (error) {
+        console.warn('[AutoMerge] Failed to stage changelog (non-fatal):', error);
+      }
+    }
+
     // Merge with --no-ff to create merge commit
-    const mergeMessage = `Merge task: ${taskTitle}\n\n🤖 Auto-merged by Auto-Claude\nTask completed and validated.`;
+    let mergeMessage = `Merge task: ${taskTitle}\n\n`;
+    mergeMessage += `🤖 Auto-merged by Auto-Claude\n`;
+    mergeMessage += `Task completed and validated.\n`;
+
+    if (changelogPath) {
+      mergeMessage += `\n📝 Changelog updated: ${path.basename(changelogPath)}\n`;
+    }
 
     await execFileAsync(
       getToolPath('git'),
@@ -495,14 +510,34 @@ export async function autoMergeTask(
       }
     }
 
+    // Generate changelog BEFORE merge
+    let changelogGenerated = false;
+    let changelogPath: string | undefined;
+
+    if (config.generateChangelog) {
+      sendProgress('Generating changelog...', 60);
+
+      const changelogResult = await generateChangelogForTask(task, project.path, config);
+
+      if (changelogResult.success) {
+        changelogGenerated = true;
+        changelogPath = changelogResult.changelogPath;
+        console.log('[AutoMerge] Changelog generated successfully');
+      } else {
+        console.warn('[AutoMerge] Changelog generation failed (non-fatal):', changelogResult.error);
+        // Continue with merge even if changelog fails
+      }
+    }
+
     sendProgress('Merging to main...', 70);
 
-    // Merge task branch into target
+    // Merge task branch into target (with changelog if generated)
     const mergeResult = await mergeTaskBranch(
       project.path,
       taskBranch,
       config.targetBranch,
-      task.title
+      task.title,
+      changelogPath
     );
 
     if (!mergeResult.success) {
@@ -539,7 +574,9 @@ export async function autoMergeTask(
       pushed,
       commitCount: commitHashes.length,
       aiValidation: aiValidation || undefined,
-      mergeCommit: mergeResult.commitHash
+      mergeCommit: mergeResult.commitHash,
+      changelogGenerated,
+      changelogPath
     };
 
   } catch (error) {

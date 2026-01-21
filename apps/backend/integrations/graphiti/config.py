@@ -63,6 +63,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
+# Load .env file if it exists (ensures env vars are available)
+from dotenv import load_dotenv
+load_dotenv()
+
 # Default configuration values
 DEFAULT_DATABASE = "auto_claude_memory"
 DEFAULT_DB_PATH = "~/.auto-claude/memories"
